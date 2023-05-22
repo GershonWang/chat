@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h1>demo页</h1>
+        <h1>当前是demo页</h1>
         <h1>当前计数为 {{ counterStore.counter }} 双倍值 {{ counterStore.doubleCount }}</h1>
         <ul>
             <li><router-link to="/hello">router-link 跳转 hello页面</router-link></li>
