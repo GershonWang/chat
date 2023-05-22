@@ -1,7 +1,4 @@
-# electron-vite-vue
-
-
-## Quick Start
+# 快速开始
 
 ```sh
 npm create electron-vite
@@ -11,11 +8,11 @@ npm create electron-vite
 
 ![electron-vite-vue.gif](/electron-vite-vue.gif)
 
-## Debug
+# 调试
 
 ![electron-vite-react-debug.gif](https://github.com/electron-vite/electron-vite-react/blob/main/electron-vite-react-debug.gif?raw=true)
 
-## Directory
+# 目录结构
 
 ```diff
 + ├─┬ electron
