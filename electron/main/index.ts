@@ -44,7 +44,7 @@ async function createWindow() {
   win = new BrowserWindow({
     title: 'Main window',
     // icon: join(process.env.PUBLIC, 'favicon.ico'),
-    icon: join(process.env.DIST, 'logo.svg'),
+    icon: 'assets/logo.png', // 设置图标路径
     webPreferences: {
       preload,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
