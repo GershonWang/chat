@@ -7,6 +7,7 @@ import { createPinia } from 'pinia'
 import 'element-plus/theme-chalk/el-message.css'
 import 'element-plus/theme-chalk/el-message-box.css'
 
+
 const app = createApp(App)
 
 // 注册挂载路由

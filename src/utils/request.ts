@@ -6,7 +6,10 @@ import {ElMessage, ElMessageBox} from 'element-plus'
 const service = axios.create({
   baseURL: 'http://localhost:8000',
   timeout: 50000,
-  headers: { 'Content-Type': 'application/json;charset=utf-8' }
+  headers: { 
+    'Content-Type': 'application/json;charset=utf-8',
+    'uid': window.localStorage.getItem('uid')
+  }
 });
 
 // 请求拦截器
