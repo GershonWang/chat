@@ -1,9 +1,9 @@
 {
   "name": "chat",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "main": "dist-electron/main/index.js",
-  "description": "Really simple Electron + Vue + Vite boilerplate.",
-  "author": "草鞋没号 <308487730@qq.com>",
+  "description": "一个聊天工具客户端",
+  "author": "Jokul <986432015@qq.com>",
   "license": "MIT",
   "private": true,
   "keywords": [
