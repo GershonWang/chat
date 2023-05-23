@@ -12,6 +12,7 @@ export function chatApi(data: ChatData): AxiosPromise<ChatResult> {
     return request({
         url: '/chat',
         method: 'post',
-        params: data
+        // params: data
+        data: JSON.stringify(data)
     });
 }

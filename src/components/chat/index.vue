@@ -111,6 +111,7 @@ function sendQue() {
         ElMessage.success("请求失败，发送内容不能为空！");
         return;
     }
+
     chatApi({ msg: inputMsg }).then(res => {
         console.log(res)
         ElMessage.success('请求成功')
@@ -168,7 +169,7 @@ p{
 }
 
 .comtainer-footer {
-    /* background-color: blue; */
+    background-color: white;
     display: flex;
     align-items: center;
     justify-content: center;
