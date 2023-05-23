@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import {useCounterStore} from '../store/counterStore'
 import {loginApi} from '../api/auth'
