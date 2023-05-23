@@ -10,10 +10,17 @@ export {}
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     Chat: typeof import('./../src/components/chat/index.vue')['default']
+    Components: typeof import('./../src/components/index.vue')['default']
     Demo: typeof import('./../src/components/demo/index.vue')['default']
+    ElAside: typeof import('element-plus/es')['ElAside']
     ElButton: typeof import('element-plus/es')['ElButton']
+    ElContainer: typeof import('element-plus/es')['ElContainer']
+    ElFooter: typeof import('element-plus/es')['ElFooter']
+    ElHeader: typeof import('element-plus/es')['ElHeader']
     ElIcon: typeof import('element-plus/es')['ElIcon']
-    HelloWorld: typeof import('./../src/components/HelloWorld.vue')['default']
+    ElInput: typeof import('element-plus/es')['ElInput']
+    ElMain: typeof import('element-plus/es')['ElMain']
+    HelloWorld: typeof import('./../src/components/demo/HelloWorld.vue')['default']
     IEpChatDotRound: typeof import('~icons/ep/chat-dot-round')['default']
     IEpEdit: typeof import('~icons/ep/edit')['default']
     RouterLink: typeof import('vue-router')['RouterLink']

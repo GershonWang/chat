@@ -1,6 +1,6 @@
 import {createRouter,createWebHashHistory} from 'vue-router'
 
-import Demo from '../components/demo/index.vue'
+import Index from '../components/index.vue'
 import Chat from '../components/chat/index.vue'
 
 const router = createRouter({
@@ -9,15 +9,19 @@ const router = createRouter({
     routes: [
         { 
             path: '/', 
-            component: Demo 
-        },
-        { 
-            path: '/hello', 
-            component: () => import("../components/HelloWorld.vue") 
+            component: Index 
         },
         { 
             path: '/chat', 
             component: Chat
+        },
+        {
+            path: '/demo',
+            component: () => import("../components/demo/index.vue")
+        },
+        { 
+            path: '/helloWorld', 
+            component: () => import("../components/demo/HelloWorld.vue") 
         },
     ], // `routes: routes` 的缩写
 })

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRouter, useRoute } from 'vue-router'
-import {useCounterStore} from '../store/counterStore'
-import {loginApi} from '../api/auth'
+import {useCounterStore} from '../../store/counterStore'
+import {loginApi} from '../../api/auth'
 import {ElMessage} from 'element-plus'
 
 const router = useRouter()
@@ -28,7 +28,7 @@ function login(){
 </script>
 
 <template>
-  <el-button type="success" @click="goBack">测试</el-button>
+  <el-button type="success" @click="goBack">返回上一层</el-button>
   <h1>{{ msg }}</h1>
   <h1>当前计数为 {{ counterStore.counter }} 双倍值 {{ counterStore.doubleCount }}</h1>
   <el-button type="success" @click="counterStore.increment">通过increment方法自增</el-button>
