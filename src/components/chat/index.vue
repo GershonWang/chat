@@ -6,11 +6,11 @@
             <el-container>
                 <el-aside class="container-menu">
                     <p>默认保持连接5分钟，默认上下文保持10个，5分钟无请求上下文会话销毁。</p>
-                 </el-aside>
+                </el-aside>
                 <el-container>
                     <el-main class="container-main">
                         <table style="border: 1;">
-                            <tbody id="chat"></tbody>
+                            <tbody id="chat" v-html="chatMsg"></tbody>
                         </table>
                     </el-main>
                     <el-footer class="comtainer-footer">
@@ -29,98 +29,109 @@ import { useRouter } from 'vue-router'
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { chatApi } from '../../api/chat'
-// import EventSource from 'event-source-polyfill'
+import { EventSourcePolyfill } from "event-source-polyfill";
+import axios from 'axios'
 
 const textarea = ref('')
 const router = useRouter();
+
+const chatMsg = ref('')
 
 // 返回上一页面
 function reback() {
     router.back();
 }
 
-
 // function setText(text, uuid_str) {
 //     let content = document.getElementById(uuid_str)
 //     content.innerHTML = marked(text);
 // }
 
-// function sse() {
-//     let sse;
-//     let text = '';
-//     let uuid_str = window.localStorage.getItem('uid');
-//     //创建sse
-//     const eventSource = new EventSource('/createSse', {
-//         headers: {
-//             'uid': window.localStorage.getItem('uid')
-//         }
-//     });
-//     eventSource.onopen = (event) => {
-//         console.log("开始输出后端返回值");
-//         sse = event.target;
-//     };
-//     eventSource.onmessage = (event) => {
-//         if (event.lastEventId == "[TOKENS]") {
-//             text = text + event.data;
-//             setText(text, uuid_str)
-//             text = ''
-//             return;
-//         }
-//         if (event.data == "[DONE]") {
-//             if (sse) {
-//                 sse.close();
-//             }
-//             return;
-//         }
-//         let json_data = JSON.parse(event.data)
-//         if (json_data.content == null || json_data.content == 'null') {
-//             return;
-//         }
-//         text = text + json_data.content;
-//         setText(text, uuid_str)
-//     };
-//     eventSource.onerror = (event) => {
-//         console.log("onerror", event);
-//         alert("服务异常请重试并联系开发者！")
-//         if (event.readyState === EventSource.CLOSED) {
-//             console.log('connection is closed');
-//         } else {
-//             console.log("Error occured", event);
-//         }
-//         event.target.close();
-//     };
-//     eventSource.addEventListener("customEventName", (event) => {
-//         console.log("Message id is " + event.lastEventId);
-//     });
-//     eventSource.addEventListener("customEventName", (event) => {
-//         console.log("Message id is " + event.lastEventId);
-//     });
-// }
+function ssef(url: string, uuid_str: string) {
+  let sse;
+  let text = '';
+  //创建sse
+  const eventSource = new EventSourcePolyfill(url, {
+    headers: {
+      'uid': uuid_str
+    },
+    heartbeatTimeout: 60000
+  });
+  eventSource.onopen = (event) => {
+    console.log("开始输出后端返回值");
+    sse = event.target;
+  };
+  eventSource.onmessage = (event) => {
+    console.log("onmessage", event);
+    if (event.lastEventId == "[TOKENS]") {
+      text = text + event.data;
+      // setText(text, uuid_str)
+      console.log(uuid_str, text);
+      text = ''
+      return;
+    }
+    if (event.data == "[DONE]") {
+      if (sse) {
+        sse.close();
+      }
+      return;
+    }
+    let json_data = JSON.parse(event.data)
+    if (json_data.content == null || json_data.content == 'null') {
+      return;
+    }
+    text = text + json_data.content;
+    //         setText(text, uuid_str)
+    console.log(uuid_str, text);
+  };
+  eventSource.onerror = (event) => {
+    console.log("onerror", event);
+    ElMessage.error("服务异常请重试并联系开发者！");
+    // if (event.readyState === EventSource.CLOSED) {
+    // console.log('connection is closed');
+    // } else {
+    // console.log("Error occured", event);
+    // }
+    event.target.close();
+  };
+  eventSource.addEventListener("customEventName", (event) => {
+    // console.log("Message id is " + event.lastEventId);
+    console.log("Message id is " + event);
+  });
+}
 
 // 请求查询接口
 function sendQue() {
-
-    // let disconnectBtn = document.getElementById("disconnectSSE");
-    // let messageElement = document.getElementById("message");
-    // let chat = document.getElementById("chat");
-
-    // sse();
-
+    let uid = <string>window.localStorage.getItem('uid');
+    console.log("请求chat时获取到的uid",uid);
     let inputMsg = textarea.value;
     if (inputMsg === null || inputMsg === '') {
         ElMessage.success("请求失败，发送内容不能为空！");
         return;
     }
-
-    chatApi({ msg: inputMsg }).then(res => {
-        console.log(res)
-        ElMessage.success('请求成功')
-        //新增问题框
-        // chat.innerHTML += '<tr><td style="height: 30px;">' + messageElement.value + '<br/><br/> tokens：' + res.question_tokens + '</td></tr>';
-        // messageElement.value = null
-        //新增答案框
-        // chat.innerHTML += '<tr><td><article id="' + uuid_str + '" class="markdown-body"></article></td></tr>';
+    // 创建sse链接
+    ssef('http://localhost:8000/createSse', uid);
+    // 发送chat
+    const url = 'http://localhost:8000/chat';
+    const data = {
+        msg: inputMsg
+    }
+    const headers = {
+        'Content-Type': 'application/json;charset=utf-8',
+        'uid': uid
+    };
+    axios.post(url, JSON.stringify(data), { headers }).then(res => {
+        console.log(res);
     })
+
+    // chatApi({ msg: inputMsg }).then(res => {
+        // console.log(res)
+        // ElMessage.success('请求成功')
+        //新增问题框
+        // chatMsg.value += '<tr><td style="height: 30px;">' + textarea.value + '<br/><br/> tokens：' + res.question_tokens + '</td></tr>';
+        //新增答案框
+        // chatMsg.value += '<tr><td><article id="' + window.localStorage.getItem('uid') + '" v-html="' + window.localStorage.getItem('uid') + '" class="markdown-body"></article></td></tr>';
+    // })
     textarea.value = ''
 }
 </script>
@@ -159,7 +170,7 @@ function sendQue() {
     text-align: left;
 }
 
-p{
+p {
     width: 120px;
     text-indent: 2em;
 }

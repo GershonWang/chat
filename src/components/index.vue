@@ -24,7 +24,7 @@ function uuid() {
   for (var i = 0; i < 36; i++) {
     s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
   }
-  s[14] = "4"; 
+  s[14] = "4";
   // s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1); 
   s[8] = s[13] = s[18] = s[23] = "-";
   var uuid = s.join("");
@@ -35,7 +35,8 @@ function uuid() {
 function toGPT(path: string) {
   // 每次跳转到聊天界面，重新刷新一次uuid
   window.localStorage.setItem('uid', uuid());
-  console.log(window.localStorage.getItem('uid'));
+  let uuid_str = <string>window.localStorage.getItem('uid');
+  console.log("跳转到聊天界面获取到的uid", uuid_str);
   // 跳转聊天界面
   router.push(path);
 }
