@@ -65,7 +65,6 @@ function ssef(url: string, uuid_str: string) {
     if (event.lastEventId == "[TOKENS]") {
       text = text + event.data;
     //   let content = document.getElementById(uuid_str);
-      article.value = text;
     //   content.innerHTML = marked(text);
       console.log(uuid_str, text);
       text = ''
@@ -82,7 +81,6 @@ function ssef(url: string, uuid_str: string) {
       return;
     }
     text = text + json_data.content;
-    article.value = text;
     console.log(uuid_str, text);
   };
   eventSource.onerror = (event) => {
