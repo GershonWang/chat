@@ -10,7 +10,7 @@
                 <el-container>
                     <el-main class="container-main">
                         <table style="border: 1;">
-                            <tbody id="chat" v-html="chatMsg"></tbody>
+                            <tbody v-html="chatMsg"></tbody>
                         </table>
                     </el-main>
                     <el-footer class="comtainer-footer">
@@ -28,14 +28,13 @@
 import { useRouter } from 'vue-router'
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { chatApi } from '../../api/chat'
 import { EventSourcePolyfill } from "event-source-polyfill";
 import axios from 'axios'
 
 const textarea = ref('')
 const router = useRouter();
-
 const chatMsg = ref('')
+const article = ref('')
 
 // 返回上一页面
 function reback() {
@@ -65,7 +64,9 @@ function ssef(url: string, uuid_str: string) {
     console.log("onmessage", event);
     if (event.lastEventId == "[TOKENS]") {
       text = text + event.data;
-      // setText(text, uuid_str)
+    //   let content = document.getElementById(uuid_str);
+      article.value = text;
+    //   content.innerHTML = marked(text);
       console.log(uuid_str, text);
       text = ''
       return;
@@ -81,7 +82,7 @@ function ssef(url: string, uuid_str: string) {
       return;
     }
     text = text + json_data.content;
-    //         setText(text, uuid_str)
+    article.value = text;
     console.log(uuid_str, text);
   };
   eventSource.onerror = (event) => {
@@ -122,16 +123,12 @@ function sendQue() {
     };
     axios.post(url, JSON.stringify(data), { headers }).then(res => {
         console.log(res);
-    })
-
-    // chatApi({ msg: inputMsg }).then(res => {
-        // console.log(res)
-        // ElMessage.success('请求成功')
         //新增问题框
-        // chatMsg.value += '<tr><td style="height: 30px;">' + textarea.value + '<br/><br/> tokens：' + res.question_tokens + '</td></tr>';
+        chatMsg.value += '<el-divider><el-icon><star-filled /></el-icon></el-divider>';
+        chatMsg.value += '<tr><td style="height: 30px;">' + inputMsg + '<br/> tokens：' + res.data.question_tokens + '</td></tr>';
         //新增答案框
-        // chatMsg.value += '<tr><td><article id="' + window.localStorage.getItem('uid') + '" v-html="' + window.localStorage.getItem('uid') + '" class="markdown-body"></article></td></tr>';
-    // })
+        chatMsg.value += '<tr><td><article id="' + window.localStorage.getItem('uid') + '" v-html="article" class="markdown-body"></article></td></tr>';
+    })
     textarea.value = ''
 }
 </script>
@@ -176,6 +173,8 @@ p {
 }
 
 .container-main {
+    height: 340px;
+    text-align: left;
     border: solid;
 }
 
