@@ -20,6 +20,8 @@ declare module '@vue/runtime-core' {
     ElIcon: typeof import('element-plus/es')['ElIcon']
     ElInput: typeof import('element-plus/es')['ElInput']
     ElMain: typeof import('element-plus/es')['ElMain']
+    ElScrollbar: typeof import('element-plus/es')['ElScrollbar']
+    ElTable: typeof import('element-plus/es')['ElTable']
     HelloWorld: typeof import('./../src/components/demo/HelloWorld.vue')['default']
     IEpChatDotRound: typeof import('~icons/ep/chat-dot-round')['default']
     IEpEdit: typeof import('~icons/ep/edit')['default']
