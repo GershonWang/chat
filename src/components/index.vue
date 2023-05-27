@@ -44,7 +44,7 @@ function toGPT(path: string) {
 }
 
 // 关闭程序
-const closeApp = ()=>{
+const closeApp = () => {
   ipcRenderer.send('close-app');
 }
 </script>

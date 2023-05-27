@@ -41,7 +41,6 @@ export default defineComponent({
       });
       this.renderedMarkdown = md.render(this.markdown);
       this.$nextTick(()=>{
-                console.log(333);
                 document.querySelectorAll('pre code').forEach((el) => {
                     // hljs.highlightElement(el);
                     hljs.highlightAll();

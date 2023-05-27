@@ -37,7 +37,7 @@ async function createWindow() {
     icon: 'assets/logo.png', // 设置图标路径
     width: 900,
     height: 500,
-    frame: false, // 隐藏标题栏
+    // frame: false, // 隐藏标题栏
     webPreferences: {
       preload,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
