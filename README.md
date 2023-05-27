@@ -26,3 +26,14 @@ npm create electron-vite
   ├── package.json
   └── vite.config.ts
 ```
+
+# 项目部署
+
+```sh
+git clone https://github.com/GershonWang/chat.git
+
+cd ./chat
+
+npm i
+
+npm run dev
