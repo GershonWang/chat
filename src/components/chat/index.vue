@@ -12,16 +12,23 @@
           </ul>
         </el-aside> -->
         <el-container>
-          <el-main class="container-main">
-            <div class="contain-main" v-html="container_main"></div>
-            <MarkdownRenderer :markdown="myMarkdown" />
-            <p>默认保持连接5分钟，默认上下文保持10个，5分钟无请求上下文会话销毁。</p>
+          <el-main class="container-main" ref="contain_main">
+            <div class="topic">
+              <p style="color:red;">#################################################################################</p>
+              <p style="color:red;">## <a style="color: cadetblue;">欢迎使用本chatGPT客户端程序，请在下方输入您要咨询的问题并按回车或者点击发送查询结果</a> ##
+              </p>
+              <p style="color:red;">#################################################################################</p>
+              <br>
+            </div>
+            <MarkdownRenderer :markdown="text" />
           </el-main>
           <el-footer class="comtainer-footer">
             <el-input id="msg" v-model="textarea" :rows="2" type="textarea" placeholder="请输入您要咨询的问题..."
-              @keyup.enter="sendQue()" input-style="width:510px" />
-            <el-button type="success" plain round @click="sendQue()" :disabled="isButtonDisabled">发送</el-button>
-            <el-button plain round @click="reback()">返回首页</el-button>
+              @keyup.enter="sendQue()" :disabled="isButtonDisabled"
+              input-style="width:600px;background-color:#2D333B;color:white;font-weight:bold;margin-right: 30px;" />
+            <el-button type="success" @click="sendQue()" :disabled="isButtonDisabled"
+              style="color: white;font-weight: bold;background-color: blueviolet;">发送</el-button>
+            <el-button @click="router.back()">返回首页</el-button>
           </el-footer>
         </el-container>
       </el-container>
@@ -36,45 +43,60 @@ import { ElMessage } from 'element-plus'
 import { EventSourcePolyfill } from "event-source-polyfill";
 import axios from 'axios'
 import MarkdownRenderer from '../../renderer/MarkdownRenderer.vue';
-import { fa } from 'element-plus/es/locale';
 
 const router = useRouter();
 
-const container_main = ref('')
 const text = ref('')
 const textarea = ref('')
-const myMarkdown = ref('')
 const isButtonDisabled = ref(false)
 
-// 返回上一页面
-function reback() {
-  router.back();
+/**
+ * 获取随机数
+ */
+function uuid() {
+  var s = [];
+  var hexDigits = "0123456789abcdef";
+  for (var i = 0; i < 36; i++) {
+    s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+  }
+  s[14] = "4";
+  // s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1); 
+  s[8] = s[13] = s[18] = s[23] = "-";
+  var uuid = s.join("");
+  return uuid;
 }
 
+/**
+ * 建立SSE服务端to客户端通信
+ * @param url 请求地址
+ * @param uuid_str 要传递的参数
+ */
 function ssef(url: string, uuid_str: string) {
+  // 创建sse对象
   let sse: EventSource | undefined;
+  // 建立连接
   const eventSource = new EventSourcePolyfill(url, {
     headers: {
       'uid': uuid_str
     },
     heartbeatTimeout: 60000
   });
+  // 打开连接
   eventSource.onopen = (event) => {
-    console.log("开始输出后端返回值");
+    // console.log("开始输出后端返回值");
     sse = event.target;
   };
+  // 发送消息
   eventSource.onmessage = (event) => {
-    console.log("onmessage", event);
-    console.log("myMarkdown.value:",myMarkdown.value);
+    // console.log("onmessage", event);
+    // 将发送按钮禁用
+    isButtonDisabled.value = true;
     if (event.lastEventId == "[TOKENS]") {
       text.value += event.data;
-      myMarkdown.value += text.value;
-      console.log("[TOKENS]", text.value);
-      text.value = ''
       return;
     }
     if (event.data == "[DONE]") {
-      myMarkdown.value += '<br>'
+      text.value += '<br>'
       if (sse) {
         sse.close();
       }
@@ -87,10 +109,10 @@ function ssef(url: string, uuid_str: string) {
       return;
     }
     text.value += json_data.content;
-    console.log('如果存在', text.value);
   };
+  // 报错时触发函数
   eventSource.onerror = (event) => {
-    console.log("onerror", event);
+    // console.log("onerror", event);
     // 重新启用按钮的点击
     isButtonDisabled.value = false;
     // ElMessage.error("服务异常请重试并联系开发者！");
@@ -101,14 +123,46 @@ function ssef(url: string, uuid_str: string) {
     }
     event.target.close();
   };
+  // 监听函数
   eventSource.addEventListener("customEventName", (event) => {
     console.log("Message id is " + event);
   });
 }
 
-// 请求查询接口
+/**
+ * 发送chat请求
+ * @param url 请求chat地址
+ * @param inputMsg 要请求的参数
+ * @param uid 传递的uuid标识
+ */
+const chatMsg = (url: string, inputMsg: string, uid: string) => {
+  const data = {
+    msg: inputMsg
+  }
+  const headers = {
+    'Content-Type': 'application/json;charset=utf-8',
+    'uid': uid
+  };
+  axios.post(url, JSON.stringify(data), { headers }).then(res => {
+    console.log(res);
+    text.value += '<a style="color:red;">🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 </a><br>';
+    text.value += '请问：<h3>' + inputMsg + '</h3>答：<br>';
+    textarea.value = ''
+  }).catch(res => {
+    console.log('接口报错打印', res)
+    // 重新发起请求
+    chatMsg(url, inputMsg, uid);
+    // text.value += '请问：<h2>' + inputMsg + '</h2><br>答：<br><a style="color:red;">请求失败，请再次尝试！</a><br>';
+  })
+}
+
+/**
+ * 请求查询接口
+ */
 async function sendQue() {
-  let uid = <string>window.localStorage.getItem('uid');
+
+  // 每次跳转到聊天界面，重新刷新一次uuid
+  let uid = uuid();
   console.log("请求chat时获取到的uid", uid);
 
   let inputMsg = textarea.value;
@@ -121,26 +175,7 @@ async function sendQue() {
   ssef('http://localhost:8000/createSse', uid);
 
   // 发送chat
-  const url = 'http://localhost:8000/chat';
-  const data = {
-    msg: inputMsg
-  }
-  const headers = {
-    'Content-Type': 'application/json;charset=utf-8',
-    'uid': uid
-  };
-  axios.post(url, JSON.stringify(data), { headers }).then(res => {
-    console.log(res);
-    // 将发送按钮禁用
-    isButtonDisabled.value = true;
-    // myMarkdown.value += '请问：' + inputMsg + '<br>答：<br>';
-    container_main.value += '请问：' + inputMsg + '<br>答：<br>';
-    textarea.value = ''
-  }).catch(res => {
-    // myMarkdown.value += '请问：' + inputMsg + '<br>答：<br><a style="color:red;">请求失败，请再次尝试！</a><br>';
-    container_main.value += '请问：' + inputMsg + '<br>答：<br><a style="color:red;">请求失败，请再次尝试！</a><br>';
-    console.log('接口报错打印', res)
-  })
+  chatMsg('http://localhost:8000/chat', inputMsg, uid);
 }
 </script>
 
@@ -156,14 +191,13 @@ async function sendQue() {
 }
 
 .container-title {
-  background-color: cornflowerblue;
+  background-color: #2D333B;
   font-size: 32px;
   font-weight: bold;
 }
 
 .container-menu {
   width: 15%;
-  /* background-color: cadetblue; */
   border: solid;
   text-align: left;
 }
@@ -172,15 +206,14 @@ async function sendQue() {
   height: 340px;
   text-align: left;
   border: solid;
-  font-weight: bold;
 }
 
-.contain-main {
-  height: 100%;
+.topic{
+  text-align: center;
 }
 
 .comtainer-footer {
-  background-color: white;
+  background-color: #22272E;
   display: flex;
   align-items: center;
   justify-content: center;
