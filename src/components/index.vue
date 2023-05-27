@@ -7,6 +7,7 @@
       <el-main>
         <el-button type="success"><a @click="toGPT('/chat')">使用GPT问答</a></el-button>
         <el-button type="success"><router-link to="/demo">测试跳转</router-link></el-button>
+        <el-button type="success"><a @click="closeApp">关闭程序</a></el-button>
       </el-main>
     </el-container>
   </div>
@@ -15,6 +16,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 
+const { ipcRenderer } = require('electron');
 const router = useRouter();
 
 // 获取随机数
@@ -41,6 +43,10 @@ function toGPT(path: string) {
   router.push(path);
 }
 
+// 关闭程序
+const closeApp = ()=>{
+  ipcRenderer.send('close-app');
+}
 </script>
 
 <style scoped>

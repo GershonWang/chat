@@ -5,6 +5,8 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import MarkdownIt from 'markdown-it';
+import 'highlight.js/styles/atom-one-dark.css'
+import hljs from 'highlight.js';
 
 export default defineComponent({
   props: {
@@ -32,14 +34,22 @@ export default defineComponent({
         html: true,
         linkify: true,
         typographer: true,
-        breaks: true
+        breaks: true,
+        // highlight: function (str, lang) {
+        //   console.log('str->', str, 'lang->', lang);
+        // }
       });
       this.renderedMarkdown = md.render(this.markdown);
+      this.$nextTick(()=>{
+                console.log(333);
+                document.querySelectorAll('pre code').forEach((el) => {
+                    // hljs.highlightElement(el);
+                    hljs.highlightAll();
+                });
+            })
     },
   },
 });
 </script>
-<style scoped>
-
-</style>
+<style scoped></style>
   

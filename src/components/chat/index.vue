@@ -95,7 +95,7 @@ function ssef(url: string, uuid_str: string) {
 }
 
 // 请求查询接口
-function sendQue() {
+async function sendQue() {
   let uid = <string>window.localStorage.getItem('uid');
   console.log("请求chat时获取到的uid", uid);
   let inputMsg = textarea.value;

@@ -35,8 +35,9 @@ async function createWindow() {
     title: 'Main window',
     // icon: join(process.env.PUBLIC, 'favicon.ico'),
     icon: 'assets/logo.png', // 设置图标路径
-    width: 800,
-    height: 600,
+    width: 900,
+    height: 500,
+    frame: false, // 隐藏标题栏
     webPreferences: {
       preload,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
@@ -109,3 +110,8 @@ ipcMain.handle('open-win', (_, arg) => {
     childWindow.loadFile(indexHtml, { hash: arg })
   }
 })
+
+// 监听页面发出的关闭程序请求
+ipcMain.on('close-app', () => {
+  app.quit();
+});
