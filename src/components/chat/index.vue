@@ -12,15 +12,17 @@
           </ul>
         </el-aside> -->
         <el-container>
-          <el-main class="container-main" ref="contain_main">
-            <div class="topic">
-              <p style="color:red;">#################################################################################</p>
-              <p style="color:red;">## <a style="color: cadetblue;">欢迎使用本chatGPT客户端程序，请在下方输入您要咨询的问题并按回车或者点击发送查询结果</a> ##
-              </p>
-              <p style="color:red;">#################################################################################</p>
-              <br>
+          <el-main class="container-main">
+            <div ref="containMain">
+              <div class="topic">
+                <p style="color:red;">#################################################################################</p>
+                <p style="color:red;">## <a style="color: cadetblue;">欢迎使用本chatGPT客户端程序，请在下方输入您要咨询的问题并按回车或者点击发送查询结果~</a> ##
+                </p>
+                <p style="color:red;">#################################################################################</p>
+                <br>
+              </div>
+              <MarkdownRenderer :markdown="text" />
             </div>
-            <MarkdownRenderer :markdown="text" />
           </el-main>
           <el-footer class="comtainer-footer">
             <el-input id="msg" v-model="textarea" :rows="2" type="textarea" placeholder="请输入您要咨询的问题..."
@@ -97,11 +99,15 @@ function ssef(url: string, uuid_str: string) {
     }
     if (event.data == "[DONE]") {
       text.value += '<br>'
+      console.log("返回的内容：：", text.value);
       if (sse) {
         sse.close();
       }
       // 重新启用按钮的点击
       isButtonDisabled.value = false;
+      // 输入框获取焦点
+      const qm = document.getElementById('msg');
+      (qm as HTMLElement).focus()
       return;
     }
     let json_data = JSON.parse(event.data)
@@ -146,7 +152,7 @@ const chatMsg = (url: string, inputMsg: string, uid: string) => {
   axios.post(url, JSON.stringify(data), { headers }).then(res => {
     console.log(res);
     text.value += '<a style="color:red;">🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 </a><br>';
-    text.value += '请问：<h3>' + inputMsg + '</h3>答：<br>';
+    text.value += '<h3>' + inputMsg + '</h3>ChatGPT大佬解答：<br>';
     textarea.value = ''
   }).catch(res => {
     console.log('接口报错打印', res)
@@ -160,20 +166,17 @@ const chatMsg = (url: string, inputMsg: string, uid: string) => {
  * 请求查询接口
  */
 async function sendQue() {
-
   // 每次跳转到聊天界面，重新刷新一次uuid
   let uid = uuid();
   console.log("请求chat时获取到的uid", uid);
-
+  // 获取输入框内容
   let inputMsg = textarea.value;
   if (inputMsg === null || inputMsg === '') {
     ElMessage.success("请求失败，发送内容不能为空！");
     return;
   }
-
   // 创建sse链接，并接收服务器端返回的数据
   ssef('http://localhost:8000/createSse', uid);
-
   // 发送chat
   chatMsg('http://localhost:8000/chat', inputMsg, uid);
 }

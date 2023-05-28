@@ -43,6 +43,7 @@ export default defineComponent({
       this.$nextTick(()=>{
                 document.querySelectorAll('pre code').forEach((el) => {
                     // hljs.highlightElement(el);
+                    // console.log(el);
                     hljs.highlightAll();
                 });
             })
