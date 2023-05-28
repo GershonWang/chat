@@ -5,7 +5,7 @@
         <ul>
             <li><router-link to="/helloWorld">router-link 跳转 hello页面</router-link></li>
             <li><a @click="goTo('/helloWorld')">点击事件 跳转 hello页面</a></li>
-            <li><a @click="$router.back()">返回</a></li>
+            <li><a @click="$router.back()">跳回首页</a></li>
         </ul>
     </div>
 </template>
