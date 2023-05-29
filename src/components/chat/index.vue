@@ -13,15 +13,20 @@
         </el-aside> -->
         <el-container>
           <el-main class="container-main">
-            <div>
+            <div class="containMain" ref="containMain">
               <div class="topic">
-                <p style="color:red;">#################################################################################</p>
-                <p style="color:red;">## <a style="color: cadetblue;">欢迎使用本chatGPT客户端程序，请在下方输入您要咨询的问题并按回车或者点击发送查询结果~</a> ##
+                <p style="color:red;">#################################################################################
                 </p>
-                <p style="color:red;">#################################################################################</p>
+                <p style="color:red;">## <a style="color: cadetblue;">欢迎使用本chatGPT客户端程序，请在下方输入您要咨询的问题并按回车或者点击发送查询结果~</a>
+                  ##
+                </p>
+                <p style="color:red;">#################################################################################
+                </p>
                 <br>
               </div>
-              <MarkdownRenderer :markdown="text" />
+              <!-- <MarkdownRenderer :markdown="text" /> -->
+              <!-- <div v-html="text"></div> -->
+              <markdown :content="text"></markdown>
             </div>
           </el-main>
           <el-footer class="comtainer-footer">
@@ -40,17 +45,20 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { ref } from 'vue'
+import { onMounted, ref, watch, watchEffect } from 'vue'
 import { ElMessage } from 'element-plus'
 import { EventSourcePolyfill } from "event-source-polyfill";
 import axios from 'axios'
 import MarkdownRenderer from '../../renderer/MarkdownRenderer.vue';
+import Markdown from '../../renderer/Markdown.vue'
 
 const router = useRouter();
 
 const text = ref('')
 const textarea = ref('')
 const isButtonDisabled = ref(false)
+
+const containMain = ref(null)
 
 /**
  * 获取随机数
@@ -115,6 +123,15 @@ function ssef(url: string, uuid_str: string) {
       return;
     }
     text.value += json_data.content;
+    // 测试获取dom元素的高度
+    const container = containMain.value
+    const scrollHeight = (container as unknown as HTMLElement).scrollHeight;
+    const scrollTop = (container as unknown as HTMLElement).scrollTop;
+    console.log('scrollHeight', scrollHeight);
+    console.log('scrollTop', scrollTop);
+    (container as unknown as HTMLElement).scrollTop = (container as unknown as HTMLElement).scrollHeight;
+    console.log('scrollHeight后', scrollHeight);
+    console.log('scrollTop后', scrollTop);
   };
   // 报错时触发函数
   eventSource.onerror = (event) => {
@@ -151,7 +168,7 @@ const chatMsg = (url: string, inputMsg: string, uid: string) => {
   };
   axios.post(url, JSON.stringify(data), { headers }).then(res => {
     console.log(res);
-    text.value += '<a style="color:red;">🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 </a><br>';
+    text.value += '<a style="color:red;"> 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 </a><br>';
     text.value += '<h3>' + inputMsg + '</h3>ChatGPT大佬解答：<br>';
     textarea.value = ''
   }).catch(res => {
@@ -180,6 +197,32 @@ async function sendQue() {
   // 发送chat
   chatMsg('http://localhost:8000/chat', inputMsg, uid);
 }
+
+// onMounted(() => {
+//   const container = containMain.value
+//   const scrollHeight = (container as unknown as HTMLElement).scrollHeight;
+//   const scrollTop = (container as unknown as HTMLElement).scrollTop;
+//   console.log('scrollHeight', scrollHeight);
+//   console.log('scrollTop', scrollTop);
+//   // 监控DOM元素高度变化
+//   watch(() => scrollHeight, () => {
+//     console.log('watch()');
+//     // 滚动条自动滚动到DOM最底部
+//     if (container) {
+//       (container as unknown as HTMLElement).scrollTop = (container as unknown as HTMLElement).scrollHeight
+//     }
+//   });
+// })
+
+// watchEffect(() => {
+//   console.log('watchEffect被调用');
+//   const container = containMain.value
+//   if (container) {
+//     const height = (containMain.value as unknown as HTMLElement).offsetHeight
+//     console.log('Element height:', height);
+//     (container as unknown as HTMLElement).scrollTop = (container as unknown as HTMLElement).scrollHeight
+//   }
+// })
 </script>
 
 <style scoped>
@@ -211,7 +254,11 @@ async function sendQue() {
   border: solid;
 }
 
-.topic{
+.containMain {
+  height: 100%;
+}
+
+.topic {
   text-align: center;
 }
 
@@ -221,5 +268,4 @@ async function sendQue() {
   align-items: center;
   justify-content: center;
   border: solid;
-}
-</style>
+}</style>
