@@ -24,13 +24,11 @@
                 </p>
                 <br>
               </div>
-              <!-- <MarkdownRenderer :markdown="text" /> -->
-              <!-- <div v-html="text"></div> -->
-              <markdown :content="text"></markdown>
+              <MarkdownRenderer :markdown="text" />
             </div>
           </el-main>
           <el-footer class="comtainer-footer">
-            <el-input id="msg" v-model="textarea" :rows="2" type="textarea" placeholder="请输入您要咨询的问题..."
+            <el-input ref="input_msg" v-model="textarea" :rows="2" type="textarea" placeholder="请输入您要咨询的问题..."
               @keyup.enter="sendQue()" :disabled="isButtonDisabled"
               input-style="width:600px;background-color:#2D333B;color:white;font-weight:bold;margin-right: 30px;" />
             <el-button type="success" @click="sendQue()" :disabled="isButtonDisabled"
@@ -45,20 +43,22 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { onMounted, ref, watch, watchEffect } from 'vue'
+import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { EventSourcePolyfill } from "event-source-polyfill";
 import axios from 'axios'
 import MarkdownRenderer from '../../renderer/MarkdownRenderer.vue';
-import Markdown from '../../renderer/Markdown.vue'
 
 const router = useRouter();
 
 const text = ref('')
 const textarea = ref('')
 const isButtonDisabled = ref(false)
-
 const containMain = ref(null)
+const input_msg = ref(null)
+
+// 将缓存的数据重新展示到页面上
+text.value += window.localStorage.getItem('textBody');
 
 /**
  * 获取随机数
@@ -93,7 +93,7 @@ function ssef(url: string, uuid_str: string) {
   });
   // 打开连接
   eventSource.onopen = (event) => {
-    // console.log("开始输出后端返回值");
+    console.log("开始输出后端返回值");
     sse = event.target;
   };
   // 发送消息
@@ -106,7 +106,7 @@ function ssef(url: string, uuid_str: string) {
       return;
     }
     if (event.data == "[DONE]") {
-      text.value += '<br>'
+      text.value += '\n\n'
       console.log("返回的内容：：", text.value);
       if (sse) {
         sse.close();
@@ -114,8 +114,9 @@ function ssef(url: string, uuid_str: string) {
       // 重新启用按钮的点击
       isButtonDisabled.value = false;
       // 输入框获取焦点
-      const qm = document.getElementById('msg');
-      (qm as HTMLElement).focus()
+      (input_msg.value as unknown as HTMLElement).focus();
+      // 将数据记录到localStorage
+      window.localStorage.setItem('textBody',text.value);
       return;
     }
     let json_data = JSON.parse(event.data)
@@ -123,19 +124,12 @@ function ssef(url: string, uuid_str: string) {
       return;
     }
     text.value += json_data.content;
-    // 测试获取dom元素的高度
-    const container = containMain.value
-    const scrollHeight = (container as unknown as HTMLElement).scrollHeight;
-    const scrollTop = (container as unknown as HTMLElement).scrollTop;
-    console.log('scrollHeight', scrollHeight);
-    console.log('scrollTop', scrollTop);
-    (container as unknown as HTMLElement).scrollTop = (container as unknown as HTMLElement).scrollHeight;
-    console.log('scrollHeight后', scrollHeight);
-    console.log('scrollTop后', scrollTop);
+    // 获取dom元素的高度并赋值给scrollTop,实现滚动条移动到最底部
+    (containMain.value as unknown as HTMLElement).scrollTop = (containMain.value as unknown as HTMLElement).scrollHeight;
   };
   // 报错时触发函数
   eventSource.onerror = (event) => {
-    // console.log("onerror", event);
+    console.log("onerror", event);
     // 重新启用按钮的点击
     isButtonDisabled.value = false;
     // ElMessage.error("服务异常请重试并联系开发者！");
@@ -168,8 +162,10 @@ const chatMsg = (url: string, inputMsg: string, uid: string) => {
   };
   axios.post(url, JSON.stringify(data), { headers }).then(res => {
     console.log(res);
-    text.value += '<a style="color:red;"> 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 </a><br>';
-    text.value += '<h3>' + inputMsg + '</h3>ChatGPT大佬解答：<br>';
+    if (text.value != null && text.value != '') {
+      text.value += '<a style="color:red;"> 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 </a><br>';
+    }
+    text.value += '<h3>' + inputMsg + '</h3>';
     textarea.value = ''
   }).catch(res => {
     console.log('接口报错打印', res)
@@ -197,32 +193,6 @@ async function sendQue() {
   // 发送chat
   chatMsg('http://localhost:8000/chat', inputMsg, uid);
 }
-
-// onMounted(() => {
-//   const container = containMain.value
-//   const scrollHeight = (container as unknown as HTMLElement).scrollHeight;
-//   const scrollTop = (container as unknown as HTMLElement).scrollTop;
-//   console.log('scrollHeight', scrollHeight);
-//   console.log('scrollTop', scrollTop);
-//   // 监控DOM元素高度变化
-//   watch(() => scrollHeight, () => {
-//     console.log('watch()');
-//     // 滚动条自动滚动到DOM最底部
-//     if (container) {
-//       (container as unknown as HTMLElement).scrollTop = (container as unknown as HTMLElement).scrollHeight
-//     }
-//   });
-// })
-
-// watchEffect(() => {
-//   console.log('watchEffect被调用');
-//   const container = containMain.value
-//   if (container) {
-//     const height = (containMain.value as unknown as HTMLElement).offsetHeight
-//     console.log('Element height:', height);
-//     (container as unknown as HTMLElement).scrollTop = (container as unknown as HTMLElement).scrollHeight
-//   }
-// })
 </script>
 
 <style scoped>
@@ -256,6 +226,7 @@ async function sendQue() {
 
 .containMain {
   height: 100%;
+  overflow: auto;
 }
 
 .topic {
@@ -268,4 +239,5 @@ async function sendQue() {
   align-items: center;
   justify-content: center;
   border: solid;
-}</style>
+}
+</style>
