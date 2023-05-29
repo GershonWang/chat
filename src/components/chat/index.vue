@@ -3,14 +3,7 @@
     <el-container class="container">
       <el-header class="container-title">聊天界面</el-header>
       <el-container>
-        <!-- <el-aside class="container-menu">
-          <ul>
-            <li>前端学习</li>
-            <li>后端学习</li>
-            <li>服务器学习</li>
-            <li>数据库学习</li>
-          </ul>
-        </el-aside> -->
+        <!-- <el-aside class="container-menu"></el-aside> -->
         <el-container>
           <el-main class="container-main">
             <div class="containMain" ref="containMain">
