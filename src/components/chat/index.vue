@@ -50,9 +50,9 @@ const isButtonDisabled = ref(false)
 const containMain = ref(null)
 const input_msg = ref(null)
 
-// 将缓存的数据重新展示到页面上
+// 将长度小于等于2000的缓存数据重新展示到页面上
 const textBody = window.localStorage.getItem('textBody');
-if (textBody) {
+if (textBody && textBody.length <= 2000) {
   text.value += textBody;
 }
 
