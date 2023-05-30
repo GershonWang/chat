@@ -19,11 +19,6 @@ if (!app.requestSingleInstanceLock()) {
   process.exit(0)
 }
 
-// Remove electron security warnings
-// This warning only shows in development mode
-// Read more on https://www.electronjs.org/docs/latest/tutorial/security
-// process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
-
 let win: BrowserWindow | null = null
 // Here, you can also use other preload
 const preload = join(__dirname, '../preload/index.js')
@@ -34,24 +29,21 @@ async function createWindow() {
   win = new BrowserWindow({
     title: 'Main window',
     // icon: join(process.env.PUBLIC, 'favicon.ico'),
-    icon: 'assets/logo.png', // 设置图标路径
+    icon: join(process.env.PUBLIC, 'logo.png'), // 设置图标路径(ICO、PNG、JPEG、BMP)
     width: 900,
     height: 500,
     // frame: false, // 隐藏标题栏
     webPreferences: {
       preload,
-      // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
-      // Consider using contextBridge.exposeInMainWorld
-      // Read more on https://www.electronjs.org/docs/latest/tutorial/context-isolation
       nodeIntegration: true,
       contextIsolation: false,
     },
     autoHideMenuBar:true //隐藏菜单栏
   })
 
-  if (process.env.VITE_DEV_SERVER_URL) { // electron-vite-vue#298
+  if (process.env.VITE_DEV_SERVER_URL) {
     win.loadURL(url)
-    // Open devTool if the app is not packaged
+    // dev开发环境，打开devTool开发者工具
     win.webContents.openDevTools({mode:'detach'})
   } else {
     win.loadFile(indexHtml)

@@ -1,6 +1,6 @@
 {
   "name": "chat",
-  "version": "2.0.2",
+  "version": "2.0.4",
   "main": "dist-electron/main/index.js",
   "description": "一个聊天工具客户端",
   "author": "Jokul <986432015@qq.com>",
@@ -21,6 +21,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build && electron-builder",
+    "buildDEB": "vue-tsc --noEmit && vite build && electron-builder --linux deb",
     "preview": "vite preview"
   },
   "devDependencies": {
