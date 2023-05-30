@@ -22,10 +22,10 @@
           </el-main>
           <el-footer class="comtainer-footer">
             <el-input ref="input_msg" v-model="textarea" :rows="2" type="textarea" placeholder="请输入您要咨询的问题..."
-              @keyup.enter="sendQue()" :disabled="isButtonDisabled"
+              @keydown.ctrl.enter="sendQue()" :disabled="isButtonDisabled"
               input-style="width:600px;background-color:#2D333B;color:white;font-weight:bold;margin-right: 30px;" />
             <el-button type="success" @click="sendQue()" :disabled="isButtonDisabled"
-              style="color: white;font-weight: bold;background-color: blueviolet;">发送</el-button>
+              style="color: white;font-weight: bold;background-color: blueviolet;">发送(Ctrl+Enter)</el-button>
             <el-button @click="router.back()">返回首页</el-button>
           </el-footer>
         </el-container>
@@ -51,7 +51,10 @@ const containMain = ref(null)
 const input_msg = ref(null)
 
 // 将缓存的数据重新展示到页面上
-text.value += window.localStorage.getItem('textBody');
+const textBody = window.localStorage.getItem('textBody');
+if (textBody) {
+  text.value += textBody;
+}
 
 /**
  * 获取随机数
@@ -109,7 +112,7 @@ function ssef(url: string, uuid_str: string) {
       // 输入框获取焦点
       (input_msg.value as unknown as HTMLElement).focus();
       // 将数据记录到localStorage
-      window.localStorage.setItem('textBody',text.value);
+      window.localStorage.setItem('textBody', text.value);
       return;
     }
     let json_data = JSON.parse(event.data)
