@@ -157,19 +157,23 @@ const chatMsg = (url: string, inputMsg: string, uid: string) => {
   };
   axios.post(url, JSON.stringify(data), { headers }).then(res => {
     console.log(res);
-  }).catch(res => {
+  }).catch(async res => {
     console.log('接口报错打印', res)
     requestNum++;
     if (requestNum < 3) {
       // 当请求次数不超过3次，重新发起请求
       chatMsg(url, inputMsg, uid);
     } else {
-      text.value += '<a style="color:red;">请求失败，请再次尝试！</a>\n\n';
-      if (containMain.value != null) {
-        console.log('scrollHeight', (containMain.value as unknown as HTMLElement).scrollHeight);
-        console.log('scrollTop', (containMain.value as unknown as HTMLElement).scrollTop);
-        (containMain.value as unknown as HTMLElement).scrollTop = (containMain.value as unknown as HTMLElement).scrollHeight;
+      text.value += '<a style="color:red;">';
+      const errorMsg = '请求失败，请再次尝试！</a>';
+      for (let i = 0; i < errorMsg.length; i++) {
+        text.value += errorMsg[i];
+        if (containMain.value != null) {
+          (containMain.value as unknown as HTMLElement).scrollTop = (containMain.value as unknown as HTMLElement).scrollHeight;
+        }
+        await sleep(100);
       }
+      text.value += '\n\n';
       requestNum = 0;
     }
   })
@@ -196,8 +200,6 @@ async function sendQue() {
   for (let i = 0; i < inputMsg.length; i++) {
     text.value += inputMsg[i];
     if (containMain.value != null) {
-      console.log('scrollHeight', (containMain.value as unknown as HTMLElement).scrollHeight);
-      console.log('scrollTop', (containMain.value as unknown as HTMLElement).scrollTop);
       (containMain.value as unknown as HTMLElement).scrollTop = (containMain.value as unknown as HTMLElement).scrollHeight;
     }
     await sleep(100);
@@ -210,7 +212,7 @@ async function sendQue() {
 }
 // 沉睡time时长
 const sleep = (time: number) => {
-    return new Promise((resolve) => setTimeout(resolve, time))
+  return new Promise((resolve) => setTimeout(resolve, time))
 }
 </script>
 
