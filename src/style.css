@@ -14,15 +14,6 @@
   -webkit-text-size-adjust: 100%;
 }
 
-a {
-  font-weight: 500;
-  color: white;
-  text-decoration: inherit;
-}
-a:hover {
-  color: white;
-}
-
 body {
   margin: 0;
   display: flex;
@@ -30,11 +21,6 @@ body {
   min-width: 320px;
   min-height: 100vh;
   position: relative;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
 }
 
 #app {
@@ -45,13 +31,8 @@ h1 {
   position: absolute;
 }
 
-ul li {
-  list-style: none;
-  font-size: 16px;
-  font-weight: bold;
-}
-
-@media (prefers-color-scheme: light) {
+/* 根据主题深浅模式，改变整体样式 */
+/* @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
     background-color: #ffffff;
@@ -65,8 +46,7 @@ ul li {
   code {
     background-color: #f9f9f9;
   }
-}
-
+} */
 
 /* 整个滚动条 */
 ::-webkit-scrollbar {

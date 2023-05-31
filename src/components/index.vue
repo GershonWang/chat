@@ -19,7 +19,6 @@ import { useRouter } from 'vue-router'
 const { ipcRenderer } = require('electron');
 const router = useRouter();
 
-
 // 跳转到聊天界面
 function toGPT(path: string) {
   // 跳转聊天界面
@@ -33,7 +32,27 @@ const closeApp = () => {
 </script>
 
 <style scoped>
+a {
+  font-weight: 500;
+  color: white;
+  text-decoration: inherit;
+}
+
+a:hover {
+  color: white;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+ul li {
+  list-style: none;
+  font-size: 16px;
+  font-weight: bold;
+}
+
 .title {
   margin-bottom: 50px;
-}
-</style>
+}</style>

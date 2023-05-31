@@ -8,13 +8,9 @@
           <el-main class="container-main">
             <div class="containMain" ref="containMain">
               <div class="topic">
-                <p style="color:red;">#################################################################################
-                </p>
-                <p style="color:red;">## <a style="color: cadetblue;">欢迎使用本chatGPT客户端程序，请在下方输入您要咨询的问题并按回车或者点击发送查询结果~</a>
-                  ##
-                </p>
-                <p style="color:red;">#################################################################################
-                </p>
+                <p style="color:red;">🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟</p>
+                <p style="color:red;">🌟 <a style="color: cadetblue;">欢迎使用本chatGPT客户端程序，请在下方输入您要咨询的问题并按回车或者点击发送</a> 🌟</p>
+                <p style="color:red;">🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟</p>
                 <br>
               </div>
               <MarkdownRenderer :markdown="text" />
@@ -49,6 +45,11 @@ const textarea = ref('')
 const isButtonDisabled = ref(false)
 const containMain = ref(null)
 const input_msg = ref(null)
+
+// 沉睡time时长
+const sleep = (time: number) => {
+  return new Promise((resolve) => setTimeout(resolve, time))
+}
 
 // 将长度小于等于2000的缓存数据重新展示到页面上
 const textBody = window.localStorage.getItem('textBody');
@@ -93,7 +94,6 @@ function ssef(url: string, uuid_str: string) {
   // 打开连接
   eventSource.onopen = (event) => {
     console.log("开始输出后端返回值");
-    textarea.value = ''
     sse = event.target;
   };
   // 发送消息
@@ -107,7 +107,7 @@ function ssef(url: string, uuid_str: string) {
     }
     if (event.data == "[DONE]") {
       text.value += '\n\n'
-      // console.log("返回的内容：：", text.value);
+      console.log("返回的内容：：", text.value);
       if (sse) {
         sse.close();
       }
@@ -148,14 +148,11 @@ function ssef(url: string, uuid_str: string) {
  * @param uid 传递的uuid标识
  */
 const chatMsg = (url: string, inputMsg: string, uid: string) => {
-  const data = {
-    msg: inputMsg
-  }
   const headers = {
     'Content-Type': 'application/json;charset=utf-8',
     'uid': uid
   };
-  axios.post(url, JSON.stringify(data), { headers }).then(res => {
+  axios.post(url, JSON.stringify({ msg: inputMsg }), { headers }).then(res => {
     console.log(res);
   }).catch(async res => {
     console.log('接口报错打印', res)
@@ -189,12 +186,14 @@ async function sendQue() {
   // 获取输入框内容
   let inputMsg = textarea.value;
   if (inputMsg === null || inputMsg === '') {
-    ElMessage.success("请求失败，发送内容不能为空！");
+    ElMessage.success("发送内容不能为空！");
     return;
   }
+  textarea.value = ''
   // 预打印输入参数
   if (text.value != null && text.value != '') {
-    text.value += ' 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 \n\n';
+    // text.value += ' 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 \n\n';
+    text.value += ' --- \n\n';
   }
   text.value += '<a style="color:#008000;font-size:24px;font-weight:bold;">';
   for (let i = 0; i < inputMsg.length; i++) {
@@ -209,10 +208,6 @@ async function sendQue() {
   ssef('http://www.dongpl.com:8000/createSse', uid);
   // 发送chat
   chatMsg('http://www.dongpl.com:8000/chat', inputMsg, uid);
-}
-// 沉睡time时长
-const sleep = (time: number) => {
-  return new Promise((resolve) => setTimeout(resolve, time))
 }
 </script>
 
@@ -231,6 +226,7 @@ const sleep = (time: number) => {
   background-color: #2D333B;
   font-size: 32px;
   font-weight: bold;
+  line-height: var(--el-header-height);
 }
 
 .container-menu {
@@ -244,11 +240,13 @@ const sleep = (time: number) => {
   height: 340px;
   text-align: left;
   border: solid;
+  padding-right: 5px;
 }
 
 .containMain {
   height: 100%;
   overflow: auto;
+  padding-right: 20px;
 }
 
 .topic {
