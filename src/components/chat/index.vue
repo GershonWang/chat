@@ -56,6 +56,9 @@ if (textBody && textBody.length <= 2000) {
   text.value += textBody;
 }
 
+// 记录请求次数
+let requestNum = 0;
+
 /**
  * 获取随机数
  */
@@ -90,6 +93,7 @@ function ssef(url: string, uuid_str: string) {
   // 打开连接
   eventSource.onopen = (event) => {
     console.log("开始输出后端返回值");
+    textarea.value = ''
     sse = event.target;
   };
   // 发送消息
@@ -103,7 +107,7 @@ function ssef(url: string, uuid_str: string) {
     }
     if (event.data == "[DONE]") {
       text.value += '\n\n'
-      console.log("返回的内容：：", text.value);
+      // console.log("返回的内容：：", text.value);
       if (sse) {
         sse.close();
       }
@@ -129,11 +133,6 @@ function ssef(url: string, uuid_str: string) {
     // 重新启用按钮的点击
     isButtonDisabled.value = false;
     // ElMessage.error("服务异常请重试并联系开发者！");
-    if (event.target.readyState === EventSource.CLOSED) {
-      console.log('connection is closed');
-    } else {
-      console.log("Error occured", event);
-    }
     event.target.close();
   };
   // 监听函数
@@ -158,16 +157,21 @@ const chatMsg = (url: string, inputMsg: string, uid: string) => {
   };
   axios.post(url, JSON.stringify(data), { headers }).then(res => {
     console.log(res);
-    if (text.value != null && text.value != '') {
-      text.value += '<a style="color:red;"> 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 </a><br>';
-    }
-    text.value += '<h3>' + inputMsg + '</h3>';
-    textarea.value = ''
   }).catch(res => {
     console.log('接口报错打印', res)
-    // 重新发起请求
-    chatMsg(url, inputMsg, uid);
-    // text.value += '请问：<h2>' + inputMsg + '</h2><br>答：<br><a style="color:red;">请求失败，请再次尝试！</a><br>';
+    requestNum++;
+    if (requestNum < 3) {
+      // 当请求次数不超过3次，重新发起请求
+      chatMsg(url, inputMsg, uid);
+    } else {
+      text.value += '<a style="color:red;">请求失败，请再次尝试！</a>\n\n';
+      if (containMain.value != null) {
+        console.log('scrollHeight', (containMain.value as unknown as HTMLElement).scrollHeight);
+        console.log('scrollTop', (containMain.value as unknown as HTMLElement).scrollTop);
+        (containMain.value as unknown as HTMLElement).scrollTop = (containMain.value as unknown as HTMLElement).scrollHeight;
+      }
+      requestNum = 0;
+    }
   })
 }
 
@@ -184,10 +188,29 @@ async function sendQue() {
     ElMessage.success("请求失败，发送内容不能为空！");
     return;
   }
+  // 预打印输入参数
+  if (text.value != null && text.value != '') {
+    text.value += ' 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 \n\n';
+  }
+  text.value += '<a style="color:#008000;font-size:24px;font-weight:bold;">';
+  for (let i = 0; i < inputMsg.length; i++) {
+    text.value += inputMsg[i];
+    if (containMain.value != null) {
+      console.log('scrollHeight', (containMain.value as unknown as HTMLElement).scrollHeight);
+      console.log('scrollTop', (containMain.value as unknown as HTMLElement).scrollTop);
+      (containMain.value as unknown as HTMLElement).scrollTop = (containMain.value as unknown as HTMLElement).scrollHeight;
+    }
+    await sleep(100);
+  }
+  text.value += '</a>\n\n';
   // 创建sse链接，并接收服务器端返回的数据
   ssef('http://www.dongpl.com:8000/createSse', uid);
   // 发送chat
   chatMsg('http://www.dongpl.com:8000/chat', inputMsg, uid);
+}
+// 沉睡time时长
+const sleep = (time: number) => {
+    return new Promise((resolve) => setTimeout(resolve, time))
 }
 </script>
 
@@ -215,6 +238,7 @@ async function sendQue() {
 }
 
 .container-main {
+  background-color: #242424;
   height: 340px;
   text-align: left;
   border: solid;
@@ -230,7 +254,7 @@ async function sendQue() {
 }
 
 .comtainer-footer {
-  background-color: #22272E;
+  background-color: #2D333B;
   display: flex;
   align-items: center;
   justify-content: center;

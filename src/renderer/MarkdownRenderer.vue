@@ -45,10 +45,6 @@ export default defineComponent({
         // document.querySelectorAll('pre code').forEach((el) => {
         //   hljs.highlightElement(el as HTMLElement);
         // });
-        document.querySelectorAll('h3').forEach((el) => {
-          (el as HTMLElement).style.fontSize = '24px';
-          (el as HTMLElement).style.color = 'yellow'
-        })
       })
     },
   },
