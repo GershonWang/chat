@@ -185,9 +185,9 @@ async function sendQue() {
     return;
   }
   // 创建sse链接，并接收服务器端返回的数据
-  ssef('http://localhost:8000/createSse', uid);
+  ssef('http://www.dongpl.com:8000/createSse', uid);
   // 发送chat
-  chatMsg('http://localhost:8000/chat', inputMsg, uid);
+  chatMsg('http://www.dongpl.com:8000/chat', inputMsg, uid);
 }
 </script>
 
