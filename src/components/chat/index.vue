@@ -18,9 +18,9 @@
           </el-main>
           <el-footer class="comtainer-footer">
             <el-input ref="input_msg" v-model="textarea" :rows="2" type="textarea" placeholder="请输入您要咨询的问题..."
-              @keydown.ctrl.enter="sendQue()" :disabled="isButtonDisabled"
+              @keydown.ctrl.enter="sendQue()" :disabled="isDisabled"
               input-style="width:600px;background-color:#2D333B;color:white;font-weight:bold;margin-right: 30px;" />
-            <el-button type="success" @click="sendQue()" :disabled="isButtonDisabled"
+            <el-button type="success" @click="sendQue()" :disabled="isDisabled"
               style="color: white;font-weight: bold;background-color: blueviolet;">发送(Ctrl+Enter)</el-button>
             <el-button @click="router.back()">返回登陆</el-button>
           </el-footer>
@@ -42,7 +42,7 @@ const router = useRouter();
 
 const text = ref('')
 const textarea = ref('')
-const isButtonDisabled = ref(false)
+const isDisabled = ref(false)
 const containMain = ref(null)
 const input_msg = ref(null)
 
@@ -84,7 +84,6 @@ function uuid() {
     s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
   }
   s[14] = "4";
-  // s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1); 
   s[8] = s[13] = s[18] = s[23] = "-";
   var uuid = s.join("");
   return uuid;
@@ -112,9 +111,6 @@ function ssef(url: string, uuid_str: string) {
   };
   // 发送消息
   eventSource.onmessage = (event) => {
-    // console.log("onmessage", event);
-    // 将发送按钮禁用
-    isButtonDisabled.value = true;
     if (event.lastEventId == "[TOKENS]") {
       text.value += event.data;
       return;
@@ -125,8 +121,8 @@ function ssef(url: string, uuid_str: string) {
       if (sse) {
         sse.close();
       }
-      // 重新启用按钮的点击
-      isButtonDisabled.value = false;
+      // 重新启用(输入框/发送按钮)
+      isDisabled.value = false;
       // 输入框获取焦点
       (input_msg.value as unknown as HTMLElement).focus();
       // 将数据记录到localStorage
@@ -144,8 +140,8 @@ function ssef(url: string, uuid_str: string) {
   // 报错时触发函数
   eventSource.onerror = (event) => {
     console.log("onerror", event);
-    // 重新启用按钮的点击
-    isButtonDisabled.value = false;
+    // 重新启用(输入框/发送按钮)
+    isDisabled.value = false;
     // ElMessage.error("服务异常请重试并联系开发者！");
     event.target.close();
   };
@@ -185,6 +181,8 @@ const chatMsg = (url: string, inputMsg: string, uid: string) => {
         await sleep(10);
       }
       text.value += '\n\n';
+      // 重新启用(输入框/发送按钮)
+      isDisabled.value = false;
       requestNum = 0;
     }
   })
@@ -204,6 +202,8 @@ async function sendQue() {
     return;
   }
   textarea.value = ''
+  // 禁用(输入框/发送按钮)
+  isDisabled.value = true;
   // 预打印输入参数
   if (text.value != null && text.value != '') {
     text.value += ' --- \n\n';
