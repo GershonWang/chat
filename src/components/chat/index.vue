@@ -22,7 +22,7 @@
               input-style="width:600px;background-color:#2D333B;color:white;font-weight:bold;margin-right: 30px;" />
             <el-button type="success" @click="sendQue()" :disabled="isButtonDisabled"
               style="color: white;font-weight: bold;background-color: blueviolet;">发送(Ctrl+Enter)</el-button>
-            <el-button @click="router.back()">返回首页</el-button>
+            <el-button @click="router.back()">返回登陆</el-button>
           </el-footer>
         </el-container>
       </el-container>

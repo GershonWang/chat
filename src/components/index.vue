@@ -6,23 +6,20 @@
       </el-header>
       <el-main class="box-main">
         <el-card class="box-card">
-          <el-form ref="ruleFormRef" :model="formLabelAlign" :rules="rules" status-icon label-width="100px" class="demo-ruleForm">
-            <el-form-item label="用户名" prop="name">
-              <el-input v-model="formLabelAlign.name"/>
+          <el-form ref="loginFormRef" :model="loginForm" :rules="rules" status-icon label-width="100px"
+            class="demo-ruleForm">
+            <el-form-item label="用户名" prop="username">
+              <el-input v-model="loginForm.username" />
             </el-form-item>
-            <el-form-item label="密码" prop="region">
-              <el-input v-model="formLabelAlign.region" type="password" autocomplete="off" />
-            </el-form-item>
-            <el-form-item label="验证码" prop="type">
-              <el-input v-model="formLabelAlign.type" type="password" autocomplete="off" />
+            <el-form-item label="密码" prop="password">
+              <el-input v-model="loginForm.password" type="password" autocomplete="off" />
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" @click="submitForm(ruleFormRef)">Create</el-button>
-              <el-button @click="resetForm(ruleFormRef)">Reset</el-button>
+              <el-button type="primary" @click="submitForm(loginFormRef)">登陆账户</el-button>
+              <el-button @click="resetForm(loginFormRef)">重新输入</el-button>
               <el-button type="danger" round><a @click="closeApp">关闭程序</a></el-button>
             </el-form-item>
           </el-form>
-          <!-- <el-button type="success" round><a @click="toGPT('/chat')">GPT问答</a></el-button> -->
           <!-- <el-button type="success" round><router-link to="/demo">测试跳转</router-link></el-button> -->
         </el-card>
       </el-main>
@@ -35,36 +32,42 @@ import { useRouter } from 'vue-router'
 import { reactive, ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ipcRenderer } from 'electron'
+import { loginApi } from '../api/auth'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter();
 
-const ruleFormRef = ref<FormInstance>()
+const loginFormRef = ref<FormInstance>()
 
-const formLabelAlign = reactive({
-  name: '',
-  region: '',
-  type: '',
+const loginForm = reactive({
+  username: '',
+  password: '',
 })
 
 const rules = reactive<FormRules>({
-  name: [
+  username: [
     { required: true, message: '用户名不能为空', trigger: 'blur' },
     { min: 3, max: 5, message: '长度为3个到5个字符之间', trigger: 'blur' },
   ],
-  region: [{required: true,message: '密码不能为空',trigger: 'change'}],
-  type: [{required: true,message: '两次密码不相同',trigger: 'change'}]
+  password: [{ required: true, message: '密码不能为空', trigger: 'change' }],
 })
 
 const submitForm = async (formEl: FormInstance | undefined) => {
-  console.log('formLabelAlign',formLabelAlign);
-  console.log('submitForm---formEl',formEl);
   if (!formEl) return
   await formEl.validate((valid, fields) => {
     if (valid) {
-      console.log('submit!')
-      console.log('fields',fields);
       // 跳转聊天界面
-      router.push('/chat');
+      const data = {
+        'username': loginForm.username,
+        'password': loginForm.password
+      }
+      loginApi(data).then(res => {
+        console.log(res)
+        if (res.data.accessToken) {
+          router.push('/chat');
+          ElMessage.success('登陆成功！')
+        }
+      })
     } else {
       console.log('error submit!', fields)
     }
@@ -72,7 +75,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 }
 
 const resetForm = (formEl: FormInstance | undefined) => {
-  console.log('resetForm---formEl',formEl);
+  console.log('resetForm---formEl', formEl);
   if (!formEl) return
   formEl.resetFields()
 }
@@ -116,5 +119,9 @@ ul li {
 .box-card {
   width: 480px;
   height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #292A2D;
 }
 </style>
