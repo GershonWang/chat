@@ -8,9 +8,11 @@
           <el-main class="container-main">
             <div class="containMain" ref="containMain">
               <div class="topic">
-                <p style="color:red;">🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟</p>
+                <p style="color:red;">🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟
+                  🌟 🌟 🌟 🌟</p>
                 <p style="color:red;">🌟 <a style="color: cadetblue;">欢迎使用本chatGPT客户端程序，请在下方输入您要咨询的问题并按回车或者点击发送</a> 🌟</p>
-                <p style="color:red;">🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟</p>
+                <p style="color:red;">🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟
+                  🌟 🌟 🌟 🌟</p>
                 <br>
               </div>
               <MarkdownRenderer :markdown="text" />
@@ -51,11 +53,25 @@ const sleep = (time: number) => {
   return new Promise((resolve) => setTimeout(resolve, time))
 }
 
-// 将长度小于等于2000的缓存数据重新展示到页面上
-const textBody = window.localStorage.getItem('textBody');
-if (textBody && textBody.length <= 2000) {
-  text.value += textBody;
+const syncHisData = async () => {
+  // 将长度小于等于2000的缓存数据重新展示到页面上
+  const textBody = window.localStorage.getItem('textBody');
+  if (textBody && textBody.length <= 2000) {
+    text.value += textBody;
+    text.value += '------------- <a style="color:#A8ABB2;font-size:12px;">';
+    const oldTitle = '以上为历史数据';
+    for (let index = 0; index < oldTitle.length; index++) {
+      text.value += oldTitle[index];
+      if (containMain.value != null) {
+        (containMain.value as unknown as HTMLElement).scrollTop = (containMain.value as unknown as HTMLElement).scrollHeight;
+      }
+      await sleep(10);
+    }
+    text.value += '</a> -------------\n\n'
+  }
 }
+// 同步历史数据到界面中
+syncHisData();
 
 // 记录请求次数
 let requestNum = 0;
@@ -168,7 +184,7 @@ const chatMsg = (url: string, inputMsg: string, uid: string) => {
         if (containMain.value != null) {
           (containMain.value as unknown as HTMLElement).scrollTop = (containMain.value as unknown as HTMLElement).scrollHeight;
         }
-        await sleep(100);
+        await sleep(10);
       }
       text.value += '\n\n';
       requestNum = 0;
@@ -192,7 +208,6 @@ async function sendQue() {
   textarea.value = ''
   // 预打印输入参数
   if (text.value != null && text.value != '') {
-    // text.value += ' 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 \n\n';
     text.value += ' --- \n\n';
   }
   text.value += '<a style="color:#008000;font-size:24px;font-weight:bold;">';
