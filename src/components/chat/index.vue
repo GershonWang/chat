@@ -8,11 +8,9 @@
           <el-main class="container-main">
             <div class="containMain" ref="containMain">
               <div class="topic">
-                <p style="color:red;">🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟
-                  🌟 🌟 🌟 🌟</p>
+                <p style="color:red;">🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟</p>
                 <p style="color:red;">🌟 <a style="color: cadetblue;">欢迎使用本chatGPT客户端程序，请在下方输入您要咨询的问题并按回车或者点击发送</a> 🌟</p>
-                <p style="color:red;">🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟
-                  🌟 🌟 🌟 🌟</p>
+                <p style="color:red;">🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟</p>
                 <br>
               </div>
               <MarkdownRenderer :markdown="text" />
