@@ -4,19 +4,18 @@
     <h3>当前计数为 {{ counterStore.counter }} 双倍值 {{ counterStore.doubleCount }}</h3>
     <ul>
       <li><router-link to="/helloWorld" style="color: white;margin-bottom: 5px">跳转到hello页面</router-link></li>
-      <li><a @click="goTo()">点击</a></li>
     </ul>
-    <el-input v-model="input" style="width: 400px;height: 80px" @change="changeInput"></el-input>
     <div>
       <div ref="container">
-        <div ref="child">
-          <div ref="grandchild" v-if="showGrandchild">{{ grandchildText }}</div>
+        <div v-for="item in state.items" :key="item.id">
+          <div ref="child" v-if="item.showChild">
+            {{ item.childText }}
+            <button @click="updateChildText(item.id)">修改第二层DOM元素</button>
+          </div>
         </div>
       </div>
-      <button @click="appendGrandchild">追加第三层DOM元素</button>
-      <button @click="updateGrandchild">修改第三层DOM元素</button>
+      <button @click="addItem">追加第一层DOM元素</button>
     </div>
-    <div ref="mainTest"></div>
   </div>
 </template>
 
@@ -26,42 +25,44 @@ import {reactive, Ref, ref} from "vue";
 
 const counterStore = useCounterStore();
 
-const input = ref('')
-const mainTest = ref(null);
-const hello = ref(null)
-
-function goTo() {
-  console.log('点击事件触发了')
-  const newElement = document.createElement('div')
-  newElement.textContent = '新元素'
-  mainTest.value.appendChild(newElement)
-}
-
-const changeInput = ()=>{
-  console.log('input',input.value)
-  console.log('hello',hello.value)
+interface Item {
+  id: number;
+  showChild: boolean;
+  childText: string;
 }
 
 interface State {
-  showGrandchild: boolean;
-  grandchildText: string;
+  items: Item[];
 }
 
 const container: Ref<HTMLElement | null> = ref(null);
 const child: Ref<HTMLElement | null> = ref(null);
-const grandchild: Ref<HTMLElement | null> = ref(null);
 
 const state: State = reactive<State>({
-  showGrandchild: false,
-  grandchildText: '第三层DOM元素'
+  items: []
 });
 
-const appendGrandchild = (): void => {
-  state.showGrandchild = true;
+let itemId = 1;
+
+const addItem = (): void => {
+  const newItem: Item = {
+    id: itemId,
+    showChild: false,
+    childText: '第二层DOM元素'
+  };
+  state.items.push(newItem);
+  itemId++;
+  if (itemId > 3){
+    const ite =  state.items.at(itemId-2);
+    ite.showChild = true;
+  }
 };
 
-const updateGrandchild = (): void => {
-  state.grandchildText = '修改后的第三层DOM元素';
+const updateChildText = (id: number): void => {
+  const item = state.items.find((item) => item.id === id);
+  if (item) {
+    item.childText = '修改后的第二层DOM元素';
+  }
 };
 </script>
 
