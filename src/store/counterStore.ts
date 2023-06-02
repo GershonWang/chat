@@ -6,6 +6,7 @@ export const useCounterStore = defineStore('counterStore', {
     return {
       // 所有这些属性都将自动推断其类型
       counter: 0,
+      token: '',
     }
   },
   actions: {

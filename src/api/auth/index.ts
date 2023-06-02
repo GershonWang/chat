@@ -1,6 +1,6 @@
 import request from '../../utils/request';
 import { AxiosPromise } from 'axios';
-import { CaptchaResult, LoginData, LoginResult } from './types';
+import { LoginData, LoginResult } from './types';
 
 /**
  * 登录API
@@ -12,7 +12,6 @@ export function loginApi(data: LoginData): AxiosPromise<LoginResult> {
   return request({
     url: '/auth/login',
     method: 'post',
-    params: data
+    params: data,
   });
 }
-
