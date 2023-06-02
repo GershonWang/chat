@@ -17,10 +17,10 @@
             <el-form-item>
               <el-button type="primary" @click="submitForm(loginFormRef)">登陆账户</el-button>
               <el-button @click="resetForm(loginFormRef)">重新输入</el-button>
+               <el-button type="danger" round><a @click="closeApp">关闭程序</a></el-button>
             </el-form-item>
           </el-form>
         </el-card>
-        <!-- <el-button type="danger" round><a @click="closeApp">关闭程序</a></el-button> -->
         <!-- <el-button type="success" round><router-link to="/demo">测试跳转</router-link></el-button> -->
       </el-main>
     </el-container>
