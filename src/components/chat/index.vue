@@ -191,7 +191,6 @@ async function sendQue() {
   }
   text.value += '</a>\n\n';
   // 创建sse链接，并接收服务器端返回的数据
-  // ssef('http://www.dongpl.com:8000/createSse', uid);
   ssef('http://localhost:8000/createSse', uid);
   // 发送提问chat请求
   chatApi({ msg: inputMsg }, uid).then(res => {
