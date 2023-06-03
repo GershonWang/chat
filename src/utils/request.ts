@@ -1,7 +1,7 @@
 import axios, { InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import { ElMessage } from 'element-plus'
 
-const baseURL = 'http://localhost:8000';
+const baseURL = 'http://www.dongpl.com:8000';
 
 // 创建 axios 实例
 const service = axios.create({

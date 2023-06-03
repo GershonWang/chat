@@ -36,8 +36,8 @@ import { useRouter } from 'vue-router'
 import { Ref, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { EventSourcePolyfill } from "event-source-polyfill";
-import { chatApi } from '../../api/chat'
-import MarkdownRenderer from '../../renderer/MarkdownRenderer.vue';
+import { chatApi } from '@/api/chat'
+import MarkdownRenderer from '@/renderer/MarkdownRenderer.vue';
 
 const router = useRouter();
 
@@ -159,7 +159,7 @@ async function sendQue() {
   // 创建sse对象
   let sse: EventSource | undefined;
   // 建立连接
-  const eventSource = new EventSourcePolyfill('http://localhost:8000/createSse', {
+  const eventSource = new EventSourcePolyfill('http://www.dongpl.com:8000/createSse', {
     headers: { 'uid': uid },
     heartbeatTimeout: 60000
   });
