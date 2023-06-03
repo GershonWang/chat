@@ -1,30 +1,27 @@
 <template>
-  <div class="common-layout">
-    <el-container>
-      <el-header class="box-title">
-        <h1>欢迎使用</h1>
-      </el-header>
-      <el-main class="box-main">
-        <el-card class="box-card">
-          <el-form ref="loginFormRef" :model="loginForm" :rules="rules" status-icon label-width="100px"
-            class="demo-ruleForm">
-            <el-form-item label="用户名" prop="username">
-              <el-input v-model="loginForm.username" />
-            </el-form-item>
-            <el-form-item label="密码" prop="password">
-              <el-input v-model="loginForm.password" type="password" autocomplete="off" />
-            </el-form-item>
-            <el-form-item>
-              <el-button type="primary" @click="submitForm(loginFormRef)">登陆账户</el-button>
-              <el-button @click="resetForm(loginFormRef)">重新输入</el-button>
-               <el-button type="danger" round><a @click="closeApp">关闭程序</a></el-button>
-            </el-form-item>
-          </el-form>
-        </el-card>
-<!--         <el-button type="success" round><router-link to="/demo">测试跳转</router-link></el-button>-->
-      </el-main>
-    </el-container>
-  </div>
+  <el-container>
+    <el-header style="margin-bottom: 50px;">
+      <h1 style="font-size: 3.2em;line-height: 1.1;">欢迎使用</h1>
+    </el-header>
+    <el-main style="margin: 0 auto;">
+      <el-card class="box-card">
+        <el-form ref="loginFormRef" :model="loginForm" :rules="rules" status-icon label-width="100px">
+          <el-form-item label="用户名" prop="username">
+            <el-input v-model="loginForm.username" autocomplete="off" placeholder="请输入用户名" />
+          </el-form-item>
+          <el-form-item label="密码" prop="password">
+            <el-input v-model="loginForm.password" type="password" autocomplete="off" placeholder="请输入密码" />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="submitForm(loginFormRef)">登陆账户</el-button>
+            <el-button @click="resetForm(loginFormRef)">重新输入</el-button>
+            <el-button type="danger" round><a @click="closeApp">关闭程序</a></el-button>
+          </el-form-item>
+        </el-form>
+      </el-card>
+      <!-- <el-button type="success" round><router-link to="/demo">测试跳转</router-link></el-button> -->
+    </el-main>
+  </el-container>
 </template>
 
 <script setup lang="ts">
@@ -39,8 +36,8 @@ const router = useRouter();
 
 const loginFormRef = ref<FormInstance>()
 const loginForm = reactive({
-  username: '',
-  password: '',
+  username: 'admin',
+  password: 'admin',
 })
 
 const rules = reactive<FormRules>({
@@ -52,7 +49,6 @@ const rules = reactive<FormRules>({
 })
 /**
  * 提交表单数据(登陆系统)
- * @param formEl 表单对象
  */
 const submitForm = async (formEl: FormInstance | undefined) => {
   if (!formEl) return
@@ -64,11 +60,11 @@ const submitForm = async (formEl: FormInstance | undefined) => {
         'password': loginForm.password
       }
       loginApi(data).then(res => {
-        console.log('loginApi',res)
-        if(res.data.code == '500'){
+        console.log('loginApi', res)
+        if (res.data.code == '500') {
           ElMessage.warning(res.data.message);
-        } else if(res.data.code == '000'){
-          localStorage.setItem('access_token',res.data.accessToken as string);
+        } else if (res.data.code == '000') {
+          localStorage.setItem('access_token', res.data.accessToken as string);
           router.push('/chat');
           ElMessage.success('欢迎您' + res.data.username + '，登陆成功！');
         }
@@ -80,7 +76,6 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 }
 /**
  * 重置表单数据
- * @param formEl 表单对象
  */
 const resetForm = (formEl: FormInstance | undefined) => {
   console.log('resetForm---formEl', formEl);
@@ -96,19 +91,6 @@ const closeApp = () => {
 </script>
 
 <style scoped>
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-.box-title {
-  margin-bottom: 50px;
-}
-
-.box-main {
-  margin: 0 auto;
-}
-
 .box-card {
   width: 480px;
   height: 260px;

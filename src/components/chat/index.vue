@@ -1,35 +1,28 @@
 <template>
-  <!-- <div class="common-layout"> -->
-    <el-container class="container">
-      <el-header class="container-title">聊天界面</el-header>
+  <el-container class="container">
+    <el-header class="container-title">聊天界面</el-header>
+    <el-container>
+      <!-- <el-aside class="container-menu"></el-aside> -->
       <el-container>
-        <!-- <el-aside class="container-menu"></el-aside> -->
-        <el-container>
-          <el-main class="container-main">
-            <div class="containMain" ref="containMain">
-              <div class="topic">
-                <p style="color:red;">🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟
-                  🌟 🌟 🌟 🌟</p>
-                <p style="color:red;">🌟 <a style="color: cadetblue;">欢迎使用本chatGPT客户端程序，请在下方输入您要咨询的问题并按回车或者点击发送</a> 🌟</p>
-                <p style="color:red;">🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟 🌟
-                  🌟 🌟 🌟 🌟</p>
-                <br>
-              </div>
-              <MarkdownRenderer :markdown="text" />
+        <el-main class="container-main">
+          <div class="containMain" ref="containMain">
+            <div class="topic">
+              <el-image src="/public/logo.svg" style="height: 100px;"></el-image>
             </div>
-          </el-main>
-          <el-footer class="comtainer-footer">
-            <el-input ref="input_msg" v-model="textarea" :rows="2" type="textarea" placeholder="请输入您要咨询的问题..."
-              @keydown.ctrl.enter="sendQue()" :disabled="isDisabled"
-              input-style="width:600px;background-color:#2D333B;color:white;font-weight:bold;margin-right: 30px;" />
-            <el-button type="success" @click="sendQue()" :disabled="isDisabled"
-              style="color: white;font-weight: bold;background-color: blueviolet;">发送(Ctrl+Enter)</el-button>
-            <el-button @click="router.back()">返回登陆</el-button>
-          </el-footer>
-        </el-container>
+            <MarkdownRenderer :markdown="text" />
+          </div>
+        </el-main>
+        <el-footer class="comtainer-footer">
+          <el-input ref="input_msg" v-model="textarea" :rows="2" type="textarea" placeholder="请输入您要咨询的问题..."
+            @keydown.ctrl.enter="sendQue()" :disabled="isDisabled"
+            input-style="width:600px;background-color:#2D333B;color:white;font-weight:bold;margin-right: 30px;" />
+          <el-button type="success" @click="sendQue()" :disabled="isDisabled"
+            style="color: white;font-weight: bold;background-color: blueviolet;">发送(Ctrl+Enter)</el-button>
+          <el-button @click="router.back()">返回登陆</el-button>
+        </el-footer>
       </el-container>
     </el-container>
-  <!-- </div> -->
+  </el-container>
 </template>
 
 <script setup lang="ts">
@@ -194,7 +187,7 @@ async function sendQue() {
   ssef('http://localhost:8000/createSse', uid);
   // 发送提问chat请求
   chatApi({ msg: inputMsg }, uid).then(res => {
-    console.log('chatApi响应结果',res);
+    console.log('chatApi响应结果', res);
   }).catch(async res => {
     console.log('接口报错打印', res)
     text.value += '<a style="color:red;">';
@@ -212,11 +205,6 @@ async function sendQue() {
 </script>
 
 <style scoped>
-.common-layout {
-  width: 100%;
-  height: 100%;
-}
-
 .container {
   width: 100%;
   height: 100%;
