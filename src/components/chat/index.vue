@@ -14,7 +14,8 @@
               <div ref="child">
                 <div v-if="item.showChild"><a style="color:red;">{{ item.warnText }}</a></div>
                 <div v-if="item.showImage">
-                  <img :src="item.imageUrl" style="height: 200px;"/>
+                  <!-- <img :src="item.imageUrl" style="height: 400px;" /> -->
+                  <ImageViewRenderer :url="item.imageUrl"></ImageViewRenderer>
                 </div>
                 <div v-if="item.showMarkdown">
                   <MarkdownRenderer :markdown="item.childText"></MarkdownRenderer>
@@ -38,11 +39,12 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { Ref, reactive, ref } from 'vue'
+import { Ref, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { EventSourcePolyfill } from "event-source-polyfill";
 import { chatApi } from '@/api/chat'
 import MarkdownRenderer from '@/renderer/MarkdownRenderer.vue';
+import ImageViewRenderer from '@/renderer/ImageViewRenderer.vue'
 
 const router = useRouter();
 
@@ -73,6 +75,15 @@ const state: State = reactive<State>({
 
 let itemId = 1;
 
+watch(state.items, () => {
+  console.log('state.items发生改变', state.items);
+  if (containMain.value != null) {
+    console.log('containMain发生改变', containMain.value.scrollHeight);
+    // 获取dom元素的高度并赋值给scrollTop,实现滚动条移动到最底部
+    (containMain.value as unknown as HTMLElement).scrollTop = (containMain.value as unknown as HTMLElement).scrollHeight;
+  }
+})
+
 /**
  * 沉睡time时长
  * @param time 时长
@@ -94,16 +105,6 @@ const uuid = () => {
   s[8] = s[13] = s[18] = s[23] = "-";
   var uuid = s.join("");
   return uuid;
-}
-
-/**
- * 滚动条自动下移
- */
-const autoScroll = (element: Ref<HTMLElement | null>) => {
-  if (element.value != null) {
-    // 获取dom元素的高度并赋值给scrollTop,实现滚动条移动到最底部
-    (element.value as unknown as HTMLElement).scrollTop = (element.value as unknown as HTMLElement).scrollHeight;
-  }
 }
 
 /**
@@ -158,10 +159,12 @@ async function sendQue() {
     childText: ''
   };
   state.items.push(newItem);
+  console.log('items新增item', state.items);
   itemId++;
   // 记录问题到缓存
   hisMessage.value += inputMsg;
   newItem.text += inputMsg;
+  console.log('修改text', state.items);
   // 创建sse对象
   let sse: EventSource | undefined;
   // 建立连接
@@ -174,7 +177,7 @@ async function sendQue() {
     console.log("开始输出后端返回值");
     sse = event.target;
     ////////////////////////////////// 发送提问chat请求 /////////////////////////////////
-    chatApi({ msg: inputMsg }, uid).then(res => {
+    chatApi({ msg: inputMsg }, uid).then(async res => {
       console.log('chatApi响应结果', res);
       const question_tokens = res.data.question_tokens;
       const imageurl = res.data.imageUrl;
@@ -193,7 +196,6 @@ async function sendQue() {
       const errorMsg = '网络请求异常，请再次尝试!';
       for (let i = 0; i < errorMsg.length; i++) {
         newItem.warnText += errorMsg[i];
-        autoScroll(containMain);
         await sleep(10);
       }
       // 重新启用(输入框/发送按钮)
@@ -230,7 +232,6 @@ async function sendQue() {
     (item as Item).showMarkdown = true;
     (item as Item).childText += json_data.content;
     hisMessage.value += json_data.content;
-    autoScroll(containMain);
   };
   // 报错时触发函数
   eventSource.onerror = async (event) => {
@@ -239,7 +240,6 @@ async function sendQue() {
     const errorMsg = '网络请求异常，请再次尝试!';
     for (let i = 0; i < errorMsg.length; i++) {
       newItem.warnText += errorMsg[i];
-      autoScroll(containMain);
       await sleep(10);
     }
     // 重新启用(输入框/发送按钮)
