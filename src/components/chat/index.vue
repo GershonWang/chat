@@ -7,13 +7,18 @@
         <el-main class="container-main">
           <div class="containMain" ref="containMain">
             <div style="text-align: center;">
-              <el-image src="/logo.svg" style="height: 100px;"></el-image>
+              <el-image src="../../../public/logo.svg" style="height: 100px;"></el-image>
             </div>
             <div v-for="item in state.items" :key="item.id">
               <div><a style="color:#008000;font-size:24px;font-weight:bold;">{{ item.text }}</a></div>
               <div ref="child">
                 <div v-if="item.showChild"><a style="color:red;">{{ item.warnText }}</a></div>
-                <MarkdownRenderer :markdown="item.childText"></MarkdownRenderer>
+                <div v-if="item.showImage">
+                  <img :src="item.imageUrl" style="height: 200px;"/>
+                </div>
+                <div v-if="item.showMarkdown">
+                  <MarkdownRenderer :markdown="item.childText"></MarkdownRenderer>
+                </div>
               </div>
             </div>
           </div>
@@ -46,6 +51,9 @@ interface Item {
   text: string;
   showChild: boolean;
   warnText: string;
+  showImage: boolean;
+  imageUrl: string;
+  showMarkdown: boolean;
   childText: string;
 }
 
@@ -144,18 +152,16 @@ async function sendQue() {
     text: '',
     showChild: false,
     warnText: '',
+    showImage: false,
+    imageUrl: '',
+    showMarkdown: false,
     childText: ''
   };
   state.items.push(newItem);
   itemId++;
   // 记录问题到缓存
   hisMessage.value += inputMsg;
-  // 逐字打印并自动滚动条
-  for (let i = 0; i < inputMsg.length; i++) {
-    await sleep(10);
-    newItem.text += inputMsg[i];
-    autoScroll(containMain);
-  }
+  newItem.text += inputMsg;
   // 创建sse对象
   let sse: EventSource | undefined;
   // 建立连接
@@ -170,6 +176,17 @@ async function sendQue() {
     ////////////////////////////////// 发送提问chat请求 /////////////////////////////////
     chatApi({ msg: inputMsg }, uid).then(res => {
       console.log('chatApi响应结果', res);
+      const question_tokens = res.data.question_tokens;
+      const imageurl = res.data.imageUrl;
+      if (question_tokens == '0' && imageurl != null) {
+        newItem.imageUrl = new URL(imageurl, import.meta.url).href;
+        newItem.showImage = true;
+        console.log('newItem', newItem);
+        // 重新启用(输入框/发送按钮)
+        isDisabled.value = false;
+        // 输入框获取焦点
+        (textareaRef.value as HTMLElement).focus();
+      }
     }).catch(async res => {
       console.log('接口报错打印', res)
       newItem.showChild = true;
@@ -181,6 +198,8 @@ async function sendQue() {
       }
       // 重新启用(输入框/发送按钮)
       isDisabled.value = false;
+      // 输入框获取焦点
+      (textareaRef.value as HTMLElement).focus();
     })
     ////////////////////////////////// 发送提问chat请求 /////////////////////////////////
   };
@@ -192,7 +211,7 @@ async function sendQue() {
     //   return;
     // }
     if (event.data == "[DONE]") {
-      console.log('hisMessage',hisMessage.value);
+      console.log('hisMessage', hisMessage.value);
       if (sse) {
         sse.close();
       }
@@ -208,15 +227,25 @@ async function sendQue() {
     if (json_data.content == null || json_data.content == 'null') {
       return;
     }
+    (item as Item).showMarkdown = true;
     (item as Item).childText += json_data.content;
     hisMessage.value += json_data.content;
     autoScroll(containMain);
   };
   // 报错时触发函数
-  eventSource.onerror = (event) => {
+  eventSource.onerror = async (event) => {
     console.log("onerror", event);
+    newItem.showChild = true;
+    const errorMsg = '网络请求异常，请再次尝试!';
+    for (let i = 0; i < errorMsg.length; i++) {
+      newItem.warnText += errorMsg[i];
+      autoScroll(containMain);
+      await sleep(10);
+    }
     // 重新启用(输入框/发送按钮)
     isDisabled.value = false;
+    // 输入框获取焦点
+    (textareaRef.value as HTMLElement).focus();
     event.target.close();
   };
   // 监听函数

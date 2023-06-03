@@ -38,7 +38,7 @@ async function createWindow() {
       nodeIntegration: true,
       contextIsolation: false,
     },
-    autoHideMenuBar:true //隐藏菜单栏
+    // autoHideMenuBar:true //隐藏菜单栏
   })
 
   if (process.env.VITE_DEV_SERVER_URL) {

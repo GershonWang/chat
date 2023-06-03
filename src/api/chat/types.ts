@@ -17,4 +17,8 @@ export interface ChatResult {
      * 访问token
      */
     question_tokens?: string;
+    /**
+     * 图片地址
+     */
+    imageUrl?: string;
 }
