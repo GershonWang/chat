@@ -54,7 +54,7 @@ const addItem = (): void => {
   itemId++;
   if (itemId > 3){
     const ite =  state.items.at(itemId-2);
-    ite.showChild = true;
+    (ite as Item).showChild = true;
   }
 };
 

@@ -40,7 +40,7 @@ service.interceptors.response.use((response: AxiosResponse) => {
   if(error.code =='ERR_NETWORK'){
     ElMessage.error('网络异常！');
   } else{
-    ElMessage.error('系统异常，请联系管理员！');
+    ElMessage.error('服务异常请重试并联系开发者！！');
   }
   return Promise.reject(error.message);
 });

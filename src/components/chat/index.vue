@@ -6,14 +6,20 @@
       <el-container>
         <el-main class="container-main">
           <div class="containMain" ref="containMain">
-            <div class="topic">
-              <el-image src="/public/logo.svg" style="height: 100px;"></el-image>
+            <div style="text-align: center;">
+              <el-image src="/logo.svg" style="height: 100px;"></el-image>
             </div>
-            <MarkdownRenderer :markdown="text" />
+            <div v-for="item in state.items" :key="item.id">
+              <div><a style="color:#008000;font-size:24px;font-weight:bold;">{{ item.text }}</a></div>
+              <div ref="child">
+                <div v-if="item.showChild"><a style="color:red;">{{ item.warnText }}</a></div>
+                <MarkdownRenderer :markdown="item.childText"></MarkdownRenderer>
+              </div>
+            </div>
           </div>
         </el-main>
         <el-footer class="comtainer-footer">
-          <el-input ref="input_msg" v-model="textarea" :rows="2" type="textarea" placeholder="请输入您要咨询的问题..."
+          <el-input ref="textareaRef" v-model="textarea" :rows="2" type="textarea" placeholder="请输入您要咨询的问题..."
             @keydown.ctrl.enter="sendQue()" :disabled="isDisabled"
             input-style="width:600px;background-color:#2D333B;color:white;font-weight:bold;margin-right: 30px;" />
           <el-button type="success" @click="sendQue()" :disabled="isDisabled"
@@ -27,7 +33,7 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { Ref, ref } from 'vue'
+import { Ref, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { EventSourcePolyfill } from "event-source-polyfill";
 import { chatApi } from '../../api/chat'
@@ -35,11 +41,29 @@ import MarkdownRenderer from '../../renderer/MarkdownRenderer.vue';
 
 const router = useRouter();
 
-const text = ref('')
-const textarea = ref('')
-const isDisabled = ref(false)
-const containMain = ref(null)
-const textareaRef = ref(null)
+interface Item {
+  id: number;
+  text: string;
+  showChild: boolean;
+  warnText: string;
+  childText: string;
+}
+
+interface State {
+  items: Item[];
+}
+
+const textarea: Ref<string> = ref('')
+const hisMessage: Ref<string> = ref('')
+const isDisabled: Ref<boolean> = ref(false)
+const containMain: Ref<HTMLElement | null> = ref(null)
+const textareaRef: Ref<HTMLElement | null> = ref(null);
+const child: Ref<HTMLElement | null> = ref(null);
+const state: State = reactive<State>({
+  items: []
+});
+
+let itemId = 1;
 
 /**
  * 沉睡time时长
@@ -67,7 +91,7 @@ const uuid = () => {
 /**
  * 滚动条自动下移
  */
-const autoScroll = (element: Ref<null>) => {
+const autoScroll = (element: Ref<HTMLElement | null>) => {
   if (element.value != null) {
     // 获取dom元素的高度并赋值给scrollTop,实现滚动条移动到最底部
     (element.value as unknown as HTMLElement).scrollTop = (element.value as unknown as HTMLElement).scrollHeight;
@@ -77,84 +101,23 @@ const autoScroll = (element: Ref<null>) => {
 /**
  * 同步历史数据到界面中
  */
-const syncHisData = async () => {
-  // 将长度小于等于2000的缓存数据重新展示到页面上
-  const textBody = window.localStorage.getItem('textBody');
-  if (textBody && textBody.length <= 2000) {
-    text.value += textBody;
-    text.value += '------------- <a style="color:#A8ABB2;font-size:12px;">';
-    const oldTitle = '以上为历史数据';
-    for (let index = 0; index < oldTitle.length; index++) {
-      text.value += oldTitle[index];
-      autoScroll(containMain);
-      await sleep(10);
-    }
-    text.value += '</a> -------------\n\n'
-  }
-}
+// const syncHisData = async () => {
+//   // 将长度小于等于2000的缓存数据重新展示到页面上
+//   const textBody = window.localStorage.getItem('textBody');
+//   if (textBody && textBody.length <= 2000) {
+//     text.value += textBody;
+//     text.value += '------------- <a style="color:#A8ABB2;font-size:12px;">';
+//     const oldTitle = '以上为历史数据';
+//     for (let index = 0; index < oldTitle.length; index++) {
+//       text.value += oldTitle[index];
+//       autoScroll(containMain);
+//       await sleep(10);
+//     }
+//     text.value += '</a> -------------\n\n'
+//   }
+// }
 // 同步历史数据到界面中
-syncHisData();
-
-/**
- * 建立SSE服务端to客户端通信
- * @param url 请求地址
- * @param uuid_str 要传递的参数
- */
-const ssef = (url: string, uuid_str: string) => {
-  // 创建sse对象
-  let sse: EventSource | undefined;
-  // 建立连接
-  const eventSource = new EventSourcePolyfill(url, {
-    headers: {
-      'uid': uuid_str
-    },
-    heartbeatTimeout: 60000
-  });
-  // 打开连接
-  eventSource.onopen = (event) => {
-    console.log("开始输出后端返回值");
-    sse = event.target;
-  };
-  // 发送消息
-  eventSource.onmessage = (event) => {
-    if (event.lastEventId == "[TOKENS]") {
-      text.value += event.data;
-      return;
-    }
-    if (event.data == "[DONE]") {
-      text.value += '\n\n'
-      console.log("返回的内容：：", text.value);
-      if (sse) {
-        sse.close();
-      }
-      // 重新启用(输入框/发送按钮)
-      isDisabled.value = false;
-      // 输入框获取焦点
-      (textareaRef.value as unknown as HTMLElement).focus();
-      // 将数据记录到localStorage
-      window.localStorage.setItem('textBody', text.value);
-      return;
-    }
-    let json_data = JSON.parse(event.data)
-    if (json_data.content == null || json_data.content == 'null') {
-      return;
-    }
-    text.value += json_data.content;
-    autoScroll(containMain);
-  };
-  // 报错时触发函数
-  eventSource.onerror = (event) => {
-    console.log("onerror", event);
-    // 重新启用(输入框/发送按钮)
-    isDisabled.value = false;
-    // ElMessage.error("服务异常请重试并联系开发者！");
-    event.target.close();
-  };
-  // 监听函数
-  eventSource.addEventListener("customEventName", (event) => {
-    console.log("Message id is " + event);
-  });
-}
+// syncHisData();
 
 /**
  * 请求查询接口
@@ -173,34 +136,93 @@ async function sendQue() {
   // 禁用(输入框/发送按钮)
   isDisabled.value = true;
   // 预打印输入参数
-  if (text.value != null && text.value != '') {
-    text.value += ' --- \n\n';
+  if (hisMessage.value != null && hisMessage.value != '') {
+    hisMessage.value += ' --- \n\n';
   }
-  text.value += '<a style="color:#008000;font-size:24px;font-weight:bold;">';
+  const newItem: Item = {
+    id: itemId,
+    text: '',
+    showChild: false,
+    warnText: '',
+    childText: ''
+  };
+  state.items.push(newItem);
+  itemId++;
+  // 记录问题到缓存
+  hisMessage.value += inputMsg;
+  // 逐字打印并自动滚动条
   for (let i = 0; i < inputMsg.length; i++) {
-    text.value += inputMsg[i];
+    await sleep(10);
+    newItem.text += inputMsg[i];
     autoScroll(containMain);
-    await sleep(100);
   }
-  text.value += '</a>\n\n';
-  // 创建sse链接，并接收服务器端返回的数据
-  ssef('http://localhost:8000/createSse', uid);
-  // 发送提问chat请求
-  chatApi({ msg: inputMsg }, uid).then(res => {
-    console.log('chatApi响应结果', res);
-  }).catch(async res => {
-    console.log('接口报错打印', res)
-    text.value += '<a style="color:red;">';
-    const errorMsg = '网络请求异常，请再次尝试！</a>';
-    for (let i = 0; i < errorMsg.length; i++) {
-      text.value += errorMsg[i];
-      autoScroll(containMain);
-      await sleep(10);
+  // 创建sse对象
+  let sse: EventSource | undefined;
+  // 建立连接
+  const eventSource = new EventSourcePolyfill('http://localhost:8000/createSse', {
+    headers: { 'uid': uid },
+    heartbeatTimeout: 60000
+  });
+  // 打开连接
+  eventSource.onopen = (event) => {
+    console.log("开始输出后端返回值");
+    sse = event.target;
+    ////////////////////////////////// 发送提问chat请求 /////////////////////////////////
+    chatApi({ msg: inputMsg }, uid).then(res => {
+      console.log('chatApi响应结果', res);
+    }).catch(async res => {
+      console.log('接口报错打印', res)
+      newItem.showChild = true;
+      const errorMsg = '网络请求异常，请再次尝试!';
+      for (let i = 0; i < errorMsg.length; i++) {
+        newItem.warnText += errorMsg[i];
+        autoScroll(containMain);
+        await sleep(10);
+      }
+      // 重新启用(输入框/发送按钮)
+      isDisabled.value = false;
+    })
+    ////////////////////////////////// 发送提问chat请求 /////////////////////////////////
+  };
+  // 发送消息
+  eventSource.onmessage = (event) => {
+    const item = state.items.at(state.items.length - 1);
+    // if (event.lastEventId == "[TOKENS]") {
+    //   text.value += event.data;
+    //   return;
+    // }
+    if (event.data == "[DONE]") {
+      console.log('hisMessage',hisMessage.value);
+      if (sse) {
+        sse.close();
+      }
+      // 重新启用(输入框/发送按钮)
+      isDisabled.value = false;
+      // 输入框获取焦点
+      (textareaRef.value as HTMLElement).focus();
+      // 将数据记录到localStorage
+      // window.localStorage.setItem('textBody', text.value);
+      return;
     }
-    text.value += '\n\n';
+    let json_data = JSON.parse(event.data)
+    if (json_data.content == null || json_data.content == 'null') {
+      return;
+    }
+    (item as Item).childText += json_data.content;
+    hisMessage.value += json_data.content;
+    autoScroll(containMain);
+  };
+  // 报错时触发函数
+  eventSource.onerror = (event) => {
+    console.log("onerror", event);
     // 重新启用(输入框/发送按钮)
     isDisabled.value = false;
-  })
+    event.target.close();
+  };
+  // 监听函数
+  eventSource.addEventListener("customEventName", (event) => {
+    console.log("Message id is " + event);
+  });
 }
 </script>
 
@@ -235,10 +257,6 @@ async function sendQue() {
   height: 100%;
   overflow: auto;
   padding-right: 20px;
-}
-
-.topic {
-  text-align: center;
 }
 
 .comtainer-footer {

@@ -23,6 +23,10 @@ const router = createRouter({
             path: '/helloWorld', 
             component: () => import("../components/demo/HelloWorld.vue") 
         },
+        { 
+            path: '/test_mark', 
+            component: () => import("../components/demo/test_mark.vue") 
+        },
     ], // `routes: routes` 的缩写
 })
 

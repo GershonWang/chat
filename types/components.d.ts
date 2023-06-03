@@ -28,5 +28,6 @@ declare module '@vue/runtime-core' {
     IEpEdit: typeof import('~icons/ep/edit')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    Test_mark: typeof import('./../src/components/demo/test_mark.vue')['default']
   }
 }
