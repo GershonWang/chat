@@ -1,5 +1,5 @@
 <template>
-  <div class="common-layout">
+  <!-- <div class="common-layout"> -->
     <el-container class="container">
       <el-header class="container-title">聊天界面</el-header>
       <el-container>
@@ -29,7 +29,7 @@
         </el-container>
       </el-container>
     </el-container>
-  </div>
+  <!-- </div> -->
 </template>
 
 <script setup lang="ts">

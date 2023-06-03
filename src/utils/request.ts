@@ -1,5 +1,5 @@
 import axios, { InternalAxiosRequestConfig, AxiosResponse } from 'axios';
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 
 const baseURL = 'http://localhost:8000';
 
@@ -25,11 +25,6 @@ service.interceptors.response.use((response: AxiosResponse) => {
   console.log('响应拦截器中', response);
   const status = response.status;
   if (status == 200) {
-    const { code, msg } = response.data;
-    // ElMessage.info(msg || '请求成功');
-    if (code === '0') {
-      return response.data;
-    }
     // 响应数据为二进制流处理(Excel导出)
     if (response.data instanceof ArrayBuffer) {
       return response;

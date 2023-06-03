@@ -38,7 +38,6 @@ import { ElMessage } from 'element-plus'
 const router = useRouter();
 
 const loginFormRef = ref<FormInstance>()
-
 const loginForm = reactive({
   username: '',
   password: '',
@@ -51,7 +50,10 @@ const rules = reactive<FormRules>({
   ],
   password: [{ required: true, message: '密码不能为空', trigger: 'change' }],
 })
-
+/**
+ * 提交表单数据(登陆系统)
+ * @param formEl 表单对象
+ */
 const submitForm = async (formEl: FormInstance | undefined) => {
   if (!formEl) return
   await formEl.validate((valid, fields) => {
@@ -62,10 +64,13 @@ const submitForm = async (formEl: FormInstance | undefined) => {
         'password': loginForm.password
       }
       loginApi(data).then(res => {
-        console.log(res)
-        if (res.data.accessToken) {
+        console.log('loginApi',res)
+        if(res.data.code == '500'){
+          ElMessage.warning(res.data.message);
+        } else if(res.data.code == '000'){
+          localStorage.setItem('access_token',res.data.accessToken as string);
           router.push('/chat');
-          ElMessage.success('登陆成功！')
+          ElMessage.success('欢迎您' + res.data.username + '，登陆成功！');
         }
       })
     } else {
@@ -73,39 +78,27 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     }
   })
 }
-
+/**
+ * 重置表单数据
+ * @param formEl 表单对象
+ */
 const resetForm = (formEl: FormInstance | undefined) => {
   console.log('resetForm---formEl', formEl);
   if (!formEl) return
   formEl.resetFields()
 }
-
-// 关闭程序
+/**
+ * 关闭程序
+ */
 const closeApp = () => {
   ipcRenderer.send('close-app');
 }
 </script>
 
 <style scoped>
-a {
-  font-weight: 500;
-  color: white;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: white;
-}
-
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
-}
-
-ul li {
-  list-style: none;
-  font-size: 16px;
-  font-weight: bold;
 }
 
 .box-title {
