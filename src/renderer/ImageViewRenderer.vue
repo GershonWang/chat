@@ -1,5 +1,5 @@
 <template>
-    <div class="image-viewer">
+  <div class="image-viewer">
     <img :src="imageUrl" @click="showModal = true">
     <div v-if="showModal" class="modal">
       <div class="modal-content">

@@ -14,7 +14,6 @@
               <div ref="child">
                 <div v-if="item.showChild"><a style="color:red;">{{ item.warnText }}</a></div>
                 <div v-if="item.showImage">
-                  <!-- <img :src="item.imageUrl" style="height: 400px;" /> -->
                   <ImageViewRenderer :url="item.imageUrl"></ImageViewRenderer>
                 </div>
                 <div v-if="item.showMarkdown">
@@ -75,14 +74,15 @@ const state: State = reactive<State>({
 
 let itemId = 1;
 
-watch(state.items, () => {
-  console.log('state.items发生改变', state.items);
+/**
+ * 自动滚动
+ */
+const autoScroll =  () => {
   if (containMain.value != null) {
-    console.log('containMain发生改变', containMain.value.scrollHeight);
     // 获取dom元素的高度并赋值给scrollTop,实现滚动条移动到最底部
     (containMain.value as unknown as HTMLElement).scrollTop = (containMain.value as unknown as HTMLElement).scrollHeight;
   }
-})
+}
 
 /**
  * 沉睡time时长
@@ -131,7 +131,7 @@ const uuid = () => {
 /**
  * 请求查询接口
  */
-async function sendQue() {
+const sendQue = async () => {
   // 每次跳转到聊天界面，重新刷新一次uuid
   let uid = uuid();
   console.log("请求chat时获取到的uid", uid);
@@ -150,7 +150,7 @@ async function sendQue() {
   }
   const newItem: Item = {
     id: itemId,
-    text: '',
+    text: inputMsg,
     showChild: false,
     warnText: '',
     showImage: false,
@@ -158,13 +158,11 @@ async function sendQue() {
     showMarkdown: false,
     childText: ''
   };
-  state.items.push(newItem);
-  console.log('items新增item', state.items);
+  state.items.push(newItem)
   itemId++;
   // 记录问题到缓存
   hisMessage.value += inputMsg;
-  newItem.text += inputMsg;
-  console.log('修改text', state.items);
+  state.items = [...state.items] // 强制更新
   // 创建sse对象
   let sse: EventSource | undefined;
   // 建立连接
@@ -184,11 +182,10 @@ async function sendQue() {
       if (question_tokens == '0' && imageurl != null) {
         newItem.imageUrl = new URL(imageurl, import.meta.url).href;
         newItem.showImage = true;
-        console.log('newItem', newItem);
-        // 重新启用(输入框/发送按钮)
-        isDisabled.value = false;
-        // 输入框获取焦点
-        (textareaRef.value as HTMLElement).focus();
+        autoScroll() // 自动滚动
+        state.items = [...state.items] // 强制更新
+        isDisabled.value = false; // 重新启用(输入框/发送按钮)
+        (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
       }
     }).catch(async res => {
       console.log('接口报错打印', res)
@@ -198,10 +195,10 @@ async function sendQue() {
         newItem.warnText += errorMsg[i];
         await sleep(10);
       }
-      // 重新启用(输入框/发送按钮)
-      isDisabled.value = false;
-      // 输入框获取焦点
-      (textareaRef.value as HTMLElement).focus();
+      state.items = [...state.items] // 强制更新
+      autoScroll() // 自动滚动
+      isDisabled.value = false; // 重新启用(输入框/发送按钮)
+      (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
     })
     ////////////////////////////////// 发送提问chat请求 /////////////////////////////////
   };
@@ -213,7 +210,7 @@ async function sendQue() {
     //   return;
     // }
     if (event.data == "[DONE]") {
-      console.log('hisMessage', hisMessage.value);
+      // console.log('hisMessage', hisMessage.value);
       if (sse) {
         sse.close();
       }
@@ -223,7 +220,6 @@ async function sendQue() {
       (textareaRef.value as HTMLElement).focus();
       // 将数据记录到localStorage
       // window.localStorage.setItem('textBody', text.value);
-      return;
     }
     let json_data = JSON.parse(event.data)
     if (json_data.content == null || json_data.content == 'null') {
@@ -231,26 +227,21 @@ async function sendQue() {
     }
     (item as Item).showMarkdown = true;
     (item as Item).childText += json_data.content;
+    state.items = [...state.items] // 强制更新
+    autoScroll() // 自动滚动
     hisMessage.value += json_data.content;
   };
   // 报错时触发函数
   eventSource.onerror = async (event) => {
     console.log("onerror", event);
-    newItem.showChild = true;
-    const errorMsg = '网络请求异常，请再次尝试!';
-    for (let i = 0; i < errorMsg.length; i++) {
-      newItem.warnText += errorMsg[i];
-      await sleep(10);
-    }
-    // 重新启用(输入框/发送按钮)
-    isDisabled.value = false;
-    // 输入框获取焦点
-    (textareaRef.value as HTMLElement).focus();
     event.target.close();
   };
   // 监听函数
   eventSource.addEventListener("customEventName", (event) => {
     console.log("Message id is " + event);
+  });
+  eventSource.addEventListener("error", (event) => {
+    console.log("error Message id is ",event);
   });
 }
 </script>
