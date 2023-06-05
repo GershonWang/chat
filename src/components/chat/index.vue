@@ -6,11 +6,8 @@
       <el-container>
         <el-main class="container-main">
           <div class="containMain" ref="containMain">
-            <div style="text-align: center;">
-              <a style="color: white;font-size: 24px;font-weight: bold;">欢迎使用</a>
-            </div>
-            <div v-for="item in state.items" :key="item.id">
-              <div><a style="color:#008000;font-size:24px;font-weight:bold;">{{ item.text }}</a></div>
+            <div class="backdrop" v-for="item in state.items" :key="item.id">
+              <div><a class="title">{{ item.text }}</a></div>
               <div ref="child">
                 <div v-if="item.showChild"><a style="color:red;">{{ item.warnText }}</a></div>
                 <div v-if="item.showImage">
@@ -63,7 +60,6 @@ interface State {
 }
 
 const textarea: Ref<string> = ref('')
-const hisMessage: Ref<string> = ref('')
 const isDisabled: Ref<boolean> = ref(false)
 const containMain: Ref<HTMLElement | null> = ref(null)
 const textareaRef: Ref<HTMLElement | null> = ref(null);
@@ -77,7 +73,7 @@ let itemId = 1;
 /**
  * 自动滚动
  */
-const autoScroll =  () => {
+const autoScroll = () => {
   if (containMain.value != null) {
     // 获取dom元素的高度并赋值给scrollTop,实现滚动条移动到最底部
     (containMain.value as unknown as HTMLElement).scrollTop = (containMain.value as unknown as HTMLElement).scrollHeight;
@@ -107,33 +103,18 @@ const uuid = () => {
   return uuid;
 }
 
-/**
- * 同步历史数据到界面中
- */
-// const syncHisData = async () => {
-//   // 将长度小于等于2000的缓存数据重新展示到页面上
-//   const textBody = window.localStorage.getItem('textBody');
-//   if (textBody && textBody.length <= 2000) {
-//     text.value += textBody;
-//     text.value += '------------- <a style="color:#A8ABB2;font-size:12px;">';
-//     const oldTitle = '以上为历史数据';
-//     for (let index = 0; index < oldTitle.length; index++) {
-//       text.value += oldTitle[index];
-//       autoScroll(containMain);
-//       await sleep(10);
-//     }
-//     text.value += '</a> -------------\n\n'
-//   }
-// }
-// 同步历史数据到界面中
-// syncHisData();
+localStorage.setItem('uid', uuid());
 
 /**
  * 请求查询接口
  */
 const sendQue = async () => {
-  // 每次跳转到聊天界面，重新刷新一次uuid
-  let uid = uuid();
+  // 获取缓存中的uuid
+  let uid: string | null = localStorage.getItem('uid');
+  if (uid == null) {
+    ElMessage.success("获取缓存中的uuid失败！");
+    return;
+  }
   console.log("请求chat时获取到的uid", uid);
   // 获取输入框内容
   let inputMsg = textarea.value;
@@ -144,10 +125,6 @@ const sendQue = async () => {
   textarea.value = ''
   // 禁用(输入框/发送按钮)
   isDisabled.value = true;
-  // 预打印输入参数
-  if (hisMessage.value != null && hisMessage.value != '') {
-    hisMessage.value += ' --- \n\n';
-  }
   const newItem: Item = {
     id: itemId,
     text: inputMsg,
@@ -160,11 +137,7 @@ const sendQue = async () => {
   };
   state.items.push(newItem)
   itemId++;
-  // 记录问题到缓存
-  hisMessage.value += inputMsg;
   state.items = [...state.items] // 强制更新
-  // 创建sse对象
-  let sse: EventSource | undefined;
   // 建立连接
   const eventSource = new EventSourcePolyfill('http://www.dongpl.com:8000/createSse', {
     headers: { 'uid': uid },
@@ -172,21 +145,16 @@ const sendQue = async () => {
   });
   // 打开连接
   eventSource.onopen = (event) => {
-    console.log("开始输出后端返回值");
-    sse = event.target;
+    console.log("开始输出后端返回值", event);
     ////////////////////////////////// 发送提问chat请求 /////////////////////////////////
+    if (uid == null) {
+      ElMessage.success("获取缓存中的uuid失败！");
+      isDisabled.value = false; // 重新启用(输入框/发送按钮)
+      (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
+      return;
+    }
     chatApi({ msg: inputMsg }, uid).then(async res => {
       console.log('chatApi响应结果', res);
-      const question_tokens = res.data.question_tokens;
-      const imageurl = res.data.imageUrl;
-      if (question_tokens == '0' && imageurl != null) {
-        newItem.imageUrl = new URL(imageurl, import.meta.url).href;
-        newItem.showImage = true;
-        autoScroll() // 自动滚动
-        state.items = [...state.items] // 强制更新
-        isDisabled.value = false; // 重新启用(输入框/发送按钮)
-        (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
-      }
     }).catch(async res => {
       console.log('接口报错打印', res)
       newItem.showChild = true;
@@ -197,6 +165,7 @@ const sendQue = async () => {
       }
       state.items = [...state.items] // 强制更新
       autoScroll() // 自动滚动
+      event.target.close(); // 关闭sse连接
       isDisabled.value = false; // 重新启用(输入框/发送按钮)
       (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
     })
@@ -204,45 +173,45 @@ const sendQue = async () => {
   };
   // 发送消息
   eventSource.onmessage = (event) => {
+    console.log('onmessage', event);
     const item = state.items.at(state.items.length - 1);
-    // if (event.lastEventId == "[TOKENS]") {
-    //   text.value += event.data;
-    //   return;
-    // }
-    if (event.data == "[DONE]") {
-      // console.log('hisMessage', hisMessage.value);
-      if (sse) {
-        sse.close();
-      }
-      // 重新启用(输入框/发送按钮)
-      isDisabled.value = false;
-      // 输入框获取焦点
-      (textareaRef.value as HTMLElement).focus();
-      // 将数据记录到localStorage
-      // window.localStorage.setItem('textBody', text.value);
+    if (event.lastEventId == "[DONE]") {
+      event.target.close(); // 关闭sse连接
+      state.items = [...state.items] // 强制更新
+      autoScroll() // 自动滚动
+      isDisabled.value = false; // 重新启用(输入框/发送按钮)
+      (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
+      return;
     }
     let json_data = JSON.parse(event.data)
     if (json_data.content == null || json_data.content == 'null') {
       return;
     }
+    if(event.lastEventId == '' && json_data.content.includes('https')) {
+        newItem.imageUrl = new URL(json_data.content, import.meta.url).href;
+        newItem.showImage = true;
+        state.items = [...state.items] // 强制更新
+        autoScroll() // 自动滚动
+        return;
+    }
     (item as Item).showMarkdown = true;
     (item as Item).childText += json_data.content;
+    console.log('json_data.content', json_data.content);
+    console.log('(item as Item).childText', (item as Item).childText);
     state.items = [...state.items] // 强制更新
     autoScroll() // 自动滚动
-    hisMessage.value += json_data.content;
   };
   // 报错时触发函数
   eventSource.onerror = async (event) => {
     console.log("onerror", event);
     event.target.close();
+    isDisabled.value = false; // 重新启用(输入框/发送按钮)
+    (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
   };
   // 监听函数
-  eventSource.addEventListener("customEventName", (event) => {
-    console.log("Message id is " + event);
-  });
-  eventSource.addEventListener("error", (event) => {
-    console.log("error Message id is ",event);
-  });
+  // eventSource.addEventListener("customEventName", (event) => {
+  //   console.log("Message id is " + event);
+  // });
 }
 </script>
 
@@ -277,6 +246,22 @@ const sendQue = async () => {
   height: 100%;
   overflow: auto;
   padding-right: 20px;
+}
+
+.backdrop {
+  width: 90%;
+  border-radius: 15px;
+  backdrop-filter: blur(20px);
+  color: #fff;
+  box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.3);
+  margin: 30px auto;
+  padding: 15px;
+}
+
+.title {
+  color:#008000;
+  font-size:24px;
+  font-weight:bold;
 }
 
 .comtainer-footer {

@@ -28,7 +28,6 @@ const indexHtml = join(process.env.DIST, 'index.html')
 async function createWindow() {
   win = new BrowserWindow({
     title: 'Main window',
-    // icon: join(process.env.PUBLIC, 'favicon.ico'),
     icon: join(process.env.PUBLIC, 'logo.png'), // 设置图标路径(ICO、PNG、JPEG、BMP)
     width: 900,
     height: 500,
@@ -38,8 +37,10 @@ async function createWindow() {
       nodeIntegration: true,
       contextIsolation: false,
     },
-    // autoHideMenuBar:true //隐藏菜单栏
+    autoHideMenuBar:true //隐藏菜单栏
   })
+  // 默认打开最大化界面
+  win.maximize();
 
   if (process.env.VITE_DEV_SERVER_URL) {
     win.loadURL(url)
