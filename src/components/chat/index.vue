@@ -7,7 +7,7 @@
         <el-main class="container-main">
           <div class="containMain" ref="containMain">
             <div style="text-align: center;">
-              <el-image src="../../../public/logo.svg" style="height: 100px;"></el-image>
+              <a style="color: white;font-size: 24px;font-weight: bold;">欢迎使用</a>
             </div>
             <div v-for="item in state.items" :key="item.id">
               <div><a style="color:#008000;font-size:24px;font-weight:bold;">{{ item.text }}</a></div>
