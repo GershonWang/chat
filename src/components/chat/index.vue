@@ -10,7 +10,7 @@
               <div><a class="title">{{ item.text }}</a></div>
               <div ref="child">
                 <div v-if="item.showChild"><a style="color:red;">{{ item.warnText }}</a></div>
-                <div v-if="item.showImage">
+                <div v-if="item.showImage" style="margin-top: 25px;">
                   <ImageViewRenderer :url="item.imageUrl"></ImageViewRenderer>
                 </div>
                 <div v-if="item.showMarkdown">

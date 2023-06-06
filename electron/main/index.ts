@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, ipcMain } from 'electron'
+import { app, BrowserWindow, shell, ipcMain, Menu } from 'electron'
 import { release } from 'node:os'
 import { join } from 'node:path'
 
@@ -41,7 +41,9 @@ async function createWindow() {
   })
   // 默认打开最大化界面
   win.maximize();
-
+  // 移除默认的菜单栏，解决使用ctrl+alt+a快捷键截图时触发显示默认菜单栏的问题
+  Menu.setApplicationMenu(null);
+  // 根据环境判断是否开启开发者工具
   if (process.env.VITE_DEV_SERVER_URL) {
     win.loadURL(url)
     // dev开发环境，打开devTool开发者工具
