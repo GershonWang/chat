@@ -24,7 +24,7 @@ export default defineConfig(({ command }) => {
   return {
     resolve: {
       alias: {
-        "@": path.resolve(__dirname,"./src"),
+        "@": path.resolve(__dirname, "./src"),
       }
     },
     plugins: [
@@ -80,7 +80,7 @@ export default defineConfig(({ command }) => {
             prefix: 'Icon',
           }),
         ],
-        dts: path.resolve(__dirname,"types/auto-imports.d.ts")
+        dts: path.resolve(__dirname, "types/auto-imports.d.ts")
       }),
       Components({
         resolvers: [
@@ -91,7 +91,7 @@ export default defineConfig(({ command }) => {
           // 自动导入 Element Plus 组件
           ElementPlusResolver()
         ],
-        dts: path.resolve(__dirname,"types/components.d.ts")
+        dts: path.resolve(__dirname, "types/components.d.ts")
       }),
       Icons({
         autoInstall: true,
@@ -104,6 +104,19 @@ export default defineConfig(({ command }) => {
         port: +url.port,
       }
     })(),
+    // 本地运行配置，及反向代理配置
+    // server: {
+    //   cors: true, // 默认启用并允许任何源
+    //   //反向代理配置，注意rewrite写法，开始没看文档在这里踩了坑
+    //   proxy: {// 本地开发环境通过代理实现跨域，生产环境使用 nginx 转发
+    //     '/api': {
+    //       target: new URL(pkg.debug.env.VITE_DEV_SERVER_URL), // 通过代理接口访问实际地址。这里是实际访问的地址。vue会通过代理服务器来代理请求
+    //       changeOrigin: true,
+    //       ws: true,  // 允许websocket代理
+    //       rewrite: (path) => path.replace(/^\/api/, '') // 将api替换为空
+    //     }
+    //   }
+    // },
     clearScreen: false,
   }
 })

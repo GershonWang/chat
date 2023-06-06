@@ -1,28 +1,30 @@
 <template>
-  <el-container>
-    <el-header style="margin-bottom: 50px;">
-      <h1 style="font-size: 3.2em;line-height: 1.1;">欢迎使用</h1>
-    </el-header>
-    <el-main style="margin: 0 auto;">
-      <el-card class="box-card">
-        <el-form ref="loginFormRef" :model="loginForm" :rules="rules" status-icon label-width="100px">
-          <el-form-item label="用户名" prop="username">
-            <el-input v-model="loginForm.username" autocomplete="off" placeholder="请输入用户名" />
-          </el-form-item>
-          <el-form-item label="密码" prop="password">
-            <el-input v-model="loginForm.password" type="password" autocomplete="off" placeholder="请输入密码" />
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="submitForm(loginFormRef)">登陆账户</el-button>
-            <el-button @click="resetForm(loginFormRef)">重新输入</el-button>
-            <el-button type="danger" round><a @click="closeApp">关闭程序</a></el-button>
-          </el-form-item>
-        </el-form>
-      </el-card>
-      <!-- <el-button type="success" round><router-link to="/demo">测试跳转</router-link></el-button> -->
-      <!-- <el-button type="success" round><router-link to="/test_mark">测试mark</router-link></el-button> -->
-    </el-main>
-  </el-container>
+  <div class="mainContainer">
+    <el-container>
+      <el-header style="margin-bottom: 50px;">
+        <h1 style="font-size: 3.2em;line-height: 1.1;">欢迎使用</h1>
+      </el-header>
+      <el-main style="margin: 0 auto;">
+        <el-card class="box-card">
+          <el-form ref="loginFormRef" :model="loginForm" :rules="rules" status-icon label-width="100px">
+            <el-form-item label="用户名" prop="username">
+              <el-input v-model="loginForm.username" autocomplete="off" placeholder="请输入用户名" />
+            </el-form-item>
+            <el-form-item label="密码" prop="password">
+              <el-input v-model="loginForm.password" type="password" autocomplete="off" placeholder="请输入密码" />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="submitForm(loginFormRef)">登陆账户</el-button>
+              <el-button @click="resetForm(loginFormRef)">重新输入</el-button>
+              <el-button type="danger" round><a @click="closeApp">关闭程序</a></el-button>
+            </el-form-item>
+          </el-form>
+        </el-card>
+        <!-- <el-button type="success" round><router-link to="/demo">测试跳转</router-link></el-button> -->
+        <!-- <el-button type="success" round><router-link to="/test_mark">测试mark</router-link></el-button> -->
+      </el-main>
+    </el-container>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -92,6 +94,13 @@ const closeApp = () => {
 </script>
 
 <style scoped>
+.mainContainer {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
 .box-card {
   width: 480px;
   height: 260px;
