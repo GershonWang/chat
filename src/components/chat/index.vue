@@ -8,8 +8,12 @@
           <div class="containMain" ref="containMain">
             <div class="backdrop" v-for="item in state.items" :key="item.id">
               <div><a class="title">{{ item.text }}</a></div>
+              <hr> <!-- 添加一条分界线 -->
+              <!-- <div class="divider"></div> -->
               <div ref="child">
-                <div v-if="item.showChild"><a style="color:red;">{{ item.warnText }}</a></div>
+                <div v-if="item.showChild" style="margin-top: 25px;">
+                  <a style="color:red;">{{ item.warnText }}</a>
+                </div>
                 <div v-if="item.showImage" style="margin-top: 25px;">
                   <ImageViewRenderer :url="item.imageUrl"></ImageViewRenderer>
                 </div>
@@ -22,7 +26,7 @@
         </el-main>
         <el-footer class="comtainer-footer">
           <el-input ref="textareaRef" v-model="textarea" :rows="2" type="textarea" placeholder="请输入您要咨询的问题..."
-            @keydown.ctrl.enter="sendQue()" :disabled="isDisabled"
+            @keydown.ctrl.enter="sendQue()" :disabled="isDisabled" :resize="'none'"
             input-style="width:600px;background-color:#2D333B;color:white;font-weight:bold;margin-right: 30px;" />
           <el-button type="success" @click="sendQue()" :disabled="isDisabled"
             style="color: white;font-weight: bold;background-color: blueviolet;">发送(Ctrl+Enter)</el-button>
@@ -174,7 +178,7 @@ const sendQue = async () => {
   // 发送消息
   eventSource.onmessage = (event) => {
     console.log('onmessage', event);
-    const item = state.items.at(state.items.length - 1);
+    // const item = state.items.at(state.items.length - 1);
     if (event.lastEventId == "[DONE]") {
       event.target.close(); // 关闭sse连接
       state.items = [...state.items] // 强制更新
@@ -187,23 +191,30 @@ const sendQue = async () => {
     if (json_data.content == null || json_data.content == 'null') {
       return;
     }
-    if(event.lastEventId == '' && json_data.content.includes('https')) {
-        newItem.imageUrl = new URL(json_data.content, import.meta.url).href;
-        newItem.showImage = true;
-        state.items = [...state.items] // 强制更新
-        autoScroll() // 自动滚动
-        return;
+    if (event.lastEventId == '' && json_data.content.includes('https')) {
+      newItem.imageUrl = new URL(json_data.content, import.meta.url).href;
+      newItem.showImage = true;
+      state.items = [...state.items] // 强制更新
+      autoScroll() // 自动滚动
+      return;
     }
-    (item as Item).showMarkdown = true;
-    (item as Item).childText += json_data.content;
-    console.log('json_data.content', json_data.content);
-    console.log('(item as Item).childText', (item as Item).childText);
+    // (item as Item).showMarkdown = true;
+    // (item as Item).childText += json_data.content;
+    newItem.showMarkdown = true;
+    newItem.childText += json_data.content;
     state.items = [...state.items] // 强制更新
     autoScroll() // 自动滚动
   };
   // 报错时触发函数
   eventSource.onerror = async (event) => {
     console.log("onerror", event);
+    newItem.showChild = true;
+    const errorMsg = '网络异常，创建连接失败，请再次尝试!';
+    for (let i = 0; i < errorMsg.length; i++) {
+      newItem.warnText += errorMsg[i];
+      await sleep(10);
+    }
+    state.items = [...state.items] // 强制更新
     event.target.close();
     isDisabled.value = false; // 重新启用(输入框/发送按钮)
     (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
@@ -234,6 +245,24 @@ const sendQue = async () => {
   text-align: left;
 }
 
+.divider {
+  position: relative;
+  height: 20px;
+  margin: 20px 0;
+}
+
+.divider::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23f8f9fa' fill-opacity='1' d='M0,192L60,208C120,224,240,256,360,256C480,256,600,224,720,192C840,160,960,128,1080,138.7C1200,149,1320,203,1380,229.3L1440,256L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+  background-size: cover;
+  z-index: -1;
+}
+
 .container-main {
   background-color: #242424;
   height: 340px;
@@ -259,9 +288,9 @@ const sendQue = async () => {
 }
 
 .title {
-  color:#008000;
-  font-size:24px;
-  font-weight:bold;
+  color: #008000;
+  font-size: 24px;
+  font-weight: bold;
 }
 
 .comtainer-footer {
