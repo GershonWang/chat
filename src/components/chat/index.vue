@@ -9,7 +9,6 @@
             <div class="backdrop" v-for="item in state.items" :key="item.id">
               <div><a class="title">{{ item.text }}</a></div>
               <hr> <!-- 添加一条分界线 -->
-              <!-- <div class="divider"></div> -->
               <div ref="child">
                 <div v-if="item.showChild" style="margin-top: 25px;">
                   <a style="color:red;">{{ item.warnText }}</a>
@@ -198,8 +197,6 @@ const sendQue = async () => {
       autoScroll() // 自动滚动
       return;
     }
-    // (item as Item).showMarkdown = true;
-    // (item as Item).childText += json_data.content;
     newItem.showMarkdown = true;
     newItem.childText += json_data.content;
     state.items = [...state.items] // 强制更新
@@ -243,24 +240,6 @@ const sendQue = async () => {
   width: 15%;
   border: solid;
   text-align: left;
-}
-
-.divider {
-  position: relative;
-  height: 20px;
-  margin: 20px 0;
-}
-
-.divider::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 20px;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23f8f9fa' fill-opacity='1' d='M0,192L60,208C120,224,240,256,360,256C480,256,600,224,720,192C840,160,960,128,1080,138.7C1200,149,1320,203,1380,229.3L1440,256L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
-  background-size: cover;
-  z-index: -1;
 }
 
 .container-main {
