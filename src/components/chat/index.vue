@@ -14,7 +14,8 @@
                   <a style="color:red;">{{ item.warnText }}</a>
                 </div>
                 <div v-if="item.showImage" style="margin-top: 25px;">
-                  <ImageViewRenderer :url="item.imageUrl"></ImageViewRenderer>
+                  <img :src="item.imageUrl" @click="showImg=true" style="width: 300px;">
+                  <big-img v-if="showImg" @click="showImg=false" :imgSrc="item.imageUrl"></big-img>
                 </div>
                 <div v-if="item.showMarkdown">
                   <MarkdownRenderer :markdown="item.childText"></MarkdownRenderer>
@@ -43,7 +44,7 @@ import { ElMessage } from 'element-plus'
 import { EventSourcePolyfill } from "event-source-polyfill";
 import { chatApi } from '@/api/chat'
 import MarkdownRenderer from '@/renderer/MarkdownRenderer.vue';
-import ImageViewRenderer from '@/renderer/ImageViewRenderer.vue'
+import BigImg from '@/renderer/ImageViewRenderer.vue'
 
 const router = useRouter();
 
@@ -65,8 +66,9 @@ interface State {
 const textarea: Ref<string> = ref('')
 const isDisabled: Ref<boolean> = ref(false)
 const containMain: Ref<HTMLElement | null> = ref(null)
-const textareaRef: Ref<HTMLElement | null> = ref(null);
-const child: Ref<HTMLElement | null> = ref(null);
+const textareaRef: Ref<HTMLElement | null> = ref(null)
+const child: Ref<HTMLElement | null> = ref(null)
+const showImg: Ref<boolean> = ref(false) 
 const state: State = reactive<State>({
   items: []
 });
