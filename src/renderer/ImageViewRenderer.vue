@@ -50,8 +50,8 @@ export default {
     max-width: 100%;
     display: block;
     position: fixed;
-    width: 26%;
-    /*height: 80%;*/
+    width: 60%;
+    height: 80%;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);

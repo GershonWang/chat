@@ -2,7 +2,7 @@
   <el-container class="container">
     <el-header class="container-title">聊天界面</el-header>
     <el-container>
-      <!-- <el-aside class="container-menu"></el-aside> -->
+      <el-aside class="container-menu"></el-aside>
       <el-container>
         <el-main class="container-main">
           <div class="containMain" ref="containMain">
@@ -14,14 +14,14 @@
                   <a style="color:red;">{{ item.warnText }}</a>
                 </div>
                 <div v-if="item.showImage" style="margin-top: 25px;">
-                  <img :src="item.imageUrl" @click="showImg=true" style="width: 300px;">
-                  <big-img v-if="showImg" @click="showImg=false" :imgSrc="item.imageUrl"></big-img>
+                  <img :src="item.imageUrl" @click="isShowImage(item.imageUrl)" style="width: 300px;">
                 </div>
                 <div v-if="item.showMarkdown">
                   <MarkdownRenderer :markdown="item.childText"></MarkdownRenderer>
                 </div>
               </div>
             </div>
+            <big-img v-if="showImg" @click="showImg = false" :imgSrc="bigImgSrc"></big-img>
           </div>
         </el-main>
         <el-footer class="comtainer-footer">
@@ -68,7 +68,8 @@ const isDisabled: Ref<boolean> = ref(false)
 const containMain: Ref<HTMLElement | null> = ref(null)
 const textareaRef: Ref<HTMLElement | null> = ref(null)
 const child: Ref<HTMLElement | null> = ref(null)
-const showImg: Ref<boolean> = ref(false) 
+const showImg: Ref<boolean> = ref(false)
+const bigImgSrc: Ref<string> = ref('')
 const state: State = reactive<State>({
   items: []
 });
@@ -110,26 +111,30 @@ const uuid = () => {
 
 localStorage.setItem('uid', uuid());
 
+const isShowImage = (imageUrl: string) => {
+  showImg.value = true;
+  bigImgSrc.value = imageUrl;
+}
+
 /**
  * 请求查询接口
  */
 const sendQue = async () => {
-  // 获取缓存中的uuid
+  /* 1.获取缓存中的uuid,并判断是否为空 */
   let uid: string | null = localStorage.getItem('uid');
   if (uid == null) {
     ElMessage.success("获取缓存中的uuid失败！");
     return;
   }
   console.log("请求chat时获取到的uid", uid);
-  // 获取输入框内容
+  /* 2.获取输入框内容,并判断是否为空 */
   let inputMsg = textarea.value;
   if (inputMsg === null || inputMsg === '') {
     ElMessage.success("发送内容不能为空！");
     return;
   }
-  textarea.value = ''
-  // 禁用(输入框/发送按钮)
-  isDisabled.value = true;
+  textarea.value = '' // 将输入框的内容置空
+  isDisabled.value = true; // 禁用(输入框/发送按钮)
   const newItem: Item = {
     id: itemId,
     text: inputMsg,
@@ -141,14 +146,15 @@ const sendQue = async () => {
     childText: ''
   };
   state.items.push(newItem)
-  itemId++;
   state.items = [...state.items] // 强制更新
-  // 建立连接
+  autoScroll() // 自动滚动
+  itemId++; // itemId加1
+  /* 3.建立SSE网络连接,并将缓存中的uid传入请求头 */
   const eventSource = new EventSourcePolyfill(import.meta.env.VITE_BASE_URL + '/createSse', {
     headers: { 'uid': uid },
     heartbeatTimeout: 60000
   });
-  // 打开连接
+  /* 3.1 打开连接 */
   eventSource.onopen = (event) => {
     console.log("开始输出后端返回值", event);
     ////////////////////////////////// 发送提问chat请求 /////////////////////////////////
@@ -166,20 +172,19 @@ const sendQue = async () => {
       const errorMsg = '网络请求异常，请再次尝试!';
       for (let i = 0; i < errorMsg.length; i++) {
         newItem.warnText += errorMsg[i];
+        state.items = [...state.items] // 强制更新
+        autoScroll() // 自动滚动
         await sleep(10);
       }
-      state.items = [...state.items] // 强制更新
-      autoScroll() // 自动滚动
       event.target.close(); // 关闭sse连接
       isDisabled.value = false; // 重新启用(输入框/发送按钮)
       (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
     })
     ////////////////////////////////// 发送提问chat请求 /////////////////////////////////
   };
-  // 发送消息
+  /* 3.2 发送消息 */
   eventSource.onmessage = (event) => {
     console.log('onmessage', event);
-    // const item = state.items.at(state.items.length - 1);
     if (event.lastEventId == "[DONE]") {
       event.target.close(); // 关闭sse连接
       state.items = [...state.items] // 强制更新
@@ -211,9 +216,10 @@ const sendQue = async () => {
     const errorMsg = '网络异常，创建连接失败，请再次尝试!';
     for (let i = 0; i < errorMsg.length; i++) {
       newItem.warnText += errorMsg[i];
+      state.items = [...state.items] // 强制更新
+      autoScroll() // 自动滚动
       await sleep(10);
     }
-    state.items = [...state.items] // 强制更新
     event.target.close();
     isDisabled.value = false; // 重新启用(输入框/发送按钮)
     (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
