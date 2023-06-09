@@ -1,11 +1,9 @@
 import axios, { InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import { ElMessage } from 'element-plus'
 
-const baseURL = 'http://www.dongpl.com:8000';
-
 // 创建 axios 实例
 const service = axios.create({
-  baseURL: baseURL,
+  baseURL: import.meta.env.VITE_BASE_URL,
   timeout: 60000,
   headers: {
     'Content-Type': 'application/json;charset=utf-8'

@@ -22,6 +22,7 @@ export default defineConfig(({ command }) => {
   const sourcemap = isServe || !!process.env.VSCODE_DEBUG
 
   return {
+    envDir: path.resolve(__dirname,"./env"),
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),

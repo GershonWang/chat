@@ -144,7 +144,7 @@ const sendQue = async () => {
   itemId++;
   state.items = [...state.items] // 强制更新
   // 建立连接
-  const eventSource = new EventSourcePolyfill('http://www.dongpl.com:8000/createSse', {
+  const eventSource = new EventSourcePolyfill(import.meta.env.VITE_BASE_URL + '/createSse', {
     headers: { 'uid': uid },
     heartbeatTimeout: 60000
   });
