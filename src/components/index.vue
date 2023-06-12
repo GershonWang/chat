@@ -8,10 +8,12 @@
         <el-card class="box-card">
           <el-form ref="loginFormRef" :model="loginForm" :rules="rules" status-icon label-width="100px">
             <el-form-item label="用户名" prop="username">
-              <el-input v-model="loginForm.username" autocomplete="off" placeholder="请输入用户名" />
+              <el-input v-model="loginForm.username" autocomplete="off" placeholder="请输入用户名"
+                @keyup.enter="handleUsernameEnter" />
             </el-form-item>
             <el-form-item label="密码" prop="password">
-              <el-input v-model="loginForm.password" type="password" autocomplete="off" placeholder="请输入密码" />
+              <el-input v-model="loginForm.password" type="password" autocomplete="off" placeholder="请输入密码"
+                @keyup.enter="submitForm(loginFormRef)" />
             </el-form-item>
             <el-form-item>
               <el-button type="primary" @click="submitForm(loginFormRef)">登陆账户</el-button>
@@ -84,6 +86,14 @@ const resetForm = (formEl: FormInstance | undefined) => {
   console.log('resetForm---formEl', formEl);
   if (!formEl) return
   formEl.resetFields()
+}
+/**
+ * 用户名输入框输入完跳转密码框
+ */
+const handleUsernameEnter = () => {
+  // 当用户名输入框按下回车键时，将焦点切换到密码输入框
+  const passwordInput = document.querySelector('input[type=password]') as HTMLInputElement;
+  passwordInput.focus();
 }
 /**
  * 关闭程序

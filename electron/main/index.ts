@@ -31,13 +31,13 @@ async function createWindow() {
     icon: join(process.env.PUBLIC, 'logo.png'), // 设置图标路径(ICO、PNG、JPEG、BMP)
     width: 900,
     height: 500,
-    // frame: false, // 隐藏标题栏
+    frame: false, // 隐藏标题栏
     webPreferences: {
       preload,
       nodeIntegration: true,
       contextIsolation: false,
     },
-    autoHideMenuBar:true //隐藏菜单栏
+    autoHideMenuBar: true //隐藏菜单栏
   })
   // 默认打开最大化界面
   win.maximize();
@@ -47,7 +47,7 @@ async function createWindow() {
   if (process.env.VITE_DEV_SERVER_URL) {
     win.loadURL(url)
     // dev开发环境，打开devTool开发者工具
-    win.webContents.openDevTools({mode:'detach'})
+    win.webContents.openDevTools({ mode: 'detach' })
   } else {
     win.loadFile(indexHtml)
   }
@@ -59,7 +59,7 @@ async function createWindow() {
 
   // Make all links open with the browser, not with the application
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('https:')) shell.openExternal(url)
+    if (url.startsWith('https:') || url.startsWith('http:')) shell.openExternal(url)
     return { action: 'deny' }
   })
   // win.webContents.on('will-navigate', (event, url) => { }) #344

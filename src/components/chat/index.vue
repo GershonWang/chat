@@ -1,6 +1,6 @@
 <template>
   <el-container class="container">
-    <el-header class="container-title">聊天界面</el-header>
+    <el-header class="container-title">ChatGPT(G版)</el-header>
     <el-container>
       <el-aside class="container-menu"></el-aside>
       <el-container>
@@ -8,7 +8,10 @@
           <div class="containMain" ref="containMain">
             <div class="backdrop" v-for="item in state.items" :key="item.id">
               <div><a class="title">{{ item.text }}</a></div>
-              <hr> <!-- 添加一条分界线 -->
+              <!-- <hr> 添加一条分界线 -->
+              <el-divider>
+                <el-icon><star-filled /></el-icon>
+              </el-divider>
               <div ref="child">
                 <div v-if="item.showChild" style="margin-top: 25px;">
                   <a style="color:red;">{{ item.warnText }}</a>
@@ -27,20 +30,29 @@
         <el-footer class="comtainer-footer">
           <el-input ref="textareaRef" v-model="textarea" :rows="2" type="textarea" placeholder="请输入您要咨询的问题..."
             @keydown.ctrl.enter="sendQue()" :disabled="isDisabled" :resize="'none'"
-            input-style="width:600px;background-color:#2D333B;color:white;font-weight:bold;margin-right: 30px;" />
+            input-style="width:600px;background-color:#2D333B;color:white;margin-right: 30px;" />
           <el-button type="success" @click="sendQue()" :disabled="isDisabled"
             style="color: white;font-weight: bold;background-color: blueviolet;">发送(Ctrl+Enter)</el-button>
           <el-button @click="router.back()">返回登陆</el-button>
+          <el-button type="danger" round><a @click="closeApp">关闭程序</a></el-button>
         </el-footer>
       </el-container>
+      <el-aside class="container-menu"></el-aside>
     </el-container>
+    <div class="bottom-title">
+      <div class="run-title">
+        本作者是后台开发从业者，前端页面是一边学习一边开发，如有不足之处，敬请提issue，作者尽能力改善！！
+      </div>
+    </div>
   </el-container>
 </template>
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { Ref, reactive, ref, watch } from 'vue'
+import { Ref, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import { StarFilled } from '@element-plus/icons-vue'
+import { ipcRenderer } from 'electron'
 import { EventSourcePolyfill } from "event-source-polyfill";
 import { chatApi } from '@/api/chat'
 import MarkdownRenderer from '@/renderer/MarkdownRenderer.vue';
@@ -229,6 +241,25 @@ const sendQue = async () => {
   //   console.log("Message id is " + event);
   // });
 }
+
+/**
+ * 关闭程序
+ */
+const closeApp = () => {
+  ipcRenderer.send('close-app');
+}
+/**
+ * 鼠标移除移出监听事件
+ */
+// const elements = document.getElementsByClassName('run-title');
+// const element = elements[0];
+// const element = document.querySelector('run-title');
+// (element as HTMLElement).addEventListener('mouseenter',()=> {
+//   (element as HTMLElement).style.animationPlayState = 'paused';
+// });
+// element.addEventListener('mouseleave',()=> {
+//   element.style.animationPlayState = 'running';
+// });
 </script>
 
 <style scoped>
@@ -239,7 +270,7 @@ const sendQue = async () => {
 
 .container-title {
   background-color: #2D333B;
-  font-size: 32px;
+  font-size: 24px;
   font-weight: bold;
   line-height: var(--el-header-height);
 }
@@ -286,5 +317,27 @@ const sendQue = async () => {
   align-items: center;
   justify-content: center;
   border: solid;
+}
+
+.bottom-title {
+  border: solid;
+  padding: 5px;
+  width: 99%;
+  height: 24px;
+  overflow: hidden;
+}
+
+.run-title {
+  animation: scroll 50s linear infinite;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(100%);
+  }
+
+  100% {
+    transform: translateX(-100%);
+  }
 }
 </style>

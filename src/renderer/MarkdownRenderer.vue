@@ -1,3 +1,4 @@
+<!-- markdown的样式功能组件 -->
 <template>
   <div v-html="renderedMarkdown"></div>
 </template>
@@ -5,8 +6,9 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import MarkdownIt from 'markdown-it';
-import 'highlight.js/styles/atom-one-dark.css'
+import 'highlight.js/styles/atom-one-dark.css';
 import hljs from 'highlight.js';
+import { shell } from 'electron';
 
 export default defineComponent({
   props: {
@@ -27,6 +29,17 @@ export default defineComponent({
     markdown() {
       this.renderMarkdown();
     },
+    openDefaultBrower() {
+      document.addEventListener('click', (event: MouseEvent) => {
+        if (event.target != null) {
+          const target = event.target as HTMLAnchorElement;
+          if (target.tagName === 'A' && target.href.startsWith('http')) {
+            event.preventDefault()
+            shell.openExternal(target.href)
+          }
+        }
+      })
+    }
   },
   methods: {
     renderMarkdown() {
@@ -38,13 +51,20 @@ export default defineComponent({
       });
       this.renderedMarkdown = md.render(this.markdown);
       this.$nextTick(() => {
+        // 拿取所有的code代码元素，进行赋值高亮模式
         document.querySelectorAll('code').forEach((el) => {
           hljs.highlightElement(el as HTMLElement);
-        })
+        });
         // 代码高亮
         // document.querySelectorAll('pre code').forEach((el) => {
         //   hljs.highlightElement(el as HTMLElement);
         // });
+        // 拿取所有的a标签元素，增加跳转默认浏览器，不使用内置浏览器打开  target="_blank"
+        document.querySelectorAll('a').forEach((el) => {
+          if (el.hasAttribute("href")) {
+            el.setAttribute('target','_blank');
+          }
+        });
       })
     },
   },
