@@ -36,12 +36,12 @@ async function createWindow() {
       nodeIntegration: true,
       contextIsolation: false,
     },
-    // autoHideMenuBar: true //隐藏菜单栏
+    autoHideMenuBar: true //隐藏菜单栏
   })
   // 默认打开最大化界面
   win.maximize();
   // 移除默认的菜单栏，解决使用ctrl+alt+a快捷键截图时触发显示默认菜单栏的问题
-  // Menu.setApplicationMenu(null);
+  Menu.setApplicationMenu(null);
   // 根据环境判断是否开启开发者工具
   if (process.env.VITE_DEV_SERVER_URL) {
     win.loadURL(url)
