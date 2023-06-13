@@ -23,9 +23,17 @@
           </el-form>
         </el-card>
         <!-- <el-button type="success" round><router-link to="/demo">测试跳转</router-link></el-button> -->
-        <!-- <el-button type="success" round><router-link to="/test_mark">测试mark</router-link></el-button> -->
+        <!-- <el-button type="success" round><router-link to="/update">测试update</router-link></el-button> -->
       </el-main>
     </el-container>
+    <div>
+      <p style="position: fixed;right: 10px;bottom: 0;">当前版本：<span ref="version"></span></p>
+      <div id="notification" ref="notification" class="hidden">
+        <p ref="message" style="color: #292A2D;"></p>
+        <button ref="close-button" @click="closeNotification()">下次再说</button>
+        <button ref="restartButton" @Click="restartApp()" class="hidden">重启更新</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -36,6 +44,11 @@ import type { FormInstance, FormRules } from 'element-plus'
 import { ipcRenderer } from 'electron'
 import { loginApi } from '../api/auth'
 import { ElMessage } from 'element-plus'
+
+const version = ref();
+const message = ref();
+const notification = ref();
+const restartButton = ref();
 
 const router = useRouter();
 
@@ -101,6 +114,60 @@ const handleUsernameEnter = () => {
 const closeApp = () => {
   ipcRenderer.send('close-app');
 }
+
+/********************************************************************************************/
+//获取当前版本
+ipcRenderer.send('app_version');
+ipcRenderer.on('app_version', (event, arg) => {
+  ipcRenderer.removeAllListeners('app_version');
+  version.value.innerText = arg.version;
+});
+//新版本检测
+console.log("开始新版本检测")
+ipcRenderer.send('checkForUpdate');
+//发现新版本
+ipcRenderer.on('checking_for', () => {
+  console.log("进入发现新版本")
+  message.value.innerText = '发现新版本';
+  notification.value.classList.remove('hidden');
+});
+ipcRenderer.on('UpdateMessage', (arg) => {
+  console.log('arg',arg);
+  notification.value.classList.remove('hidden');
+});
+//发现新版本
+ipcRenderer.on('update_available', () => {
+  console.log("正在下载中...")
+  message.value.innerText = '正在下载中...';
+  notification.value.classList.remove('hidden');
+});
+//下载成功触发
+ipcRenderer.on('update_downloaded', () => {
+  ipcRenderer.removeAllListeners('update_downloaded');
+  message.value.innerText = '下载成功！是否更新?';
+  restartButton.value.classList.remove('hidden');
+  notification.value.classList.remove('hidden');
+});
+//下载中触发
+ipcRenderer.on("downloadProgress", (event, progressObj) => {
+  console.log(progressObj);
+  let downloadPercent = progressObj.percent || 0;
+  message.value.innerText = "正在下载..." + downloadPercent;
+});
+// 下载异常触发
+ipcRenderer.on('checking_error', (arg) => {
+  console.log('arg',arg)
+  message.value.innerText = '更新失败请检测网络';
+  notification.value.classList.remove('hidden');
+});
+
+function closeNotification() {
+  notification.value.classList.add('hidden');
+}
+
+function restartApp() {
+  ipcRenderer.send('isUpdateNow');
+}
 </script>
 
 <style scoped>
@@ -118,5 +185,20 @@ const closeApp = () => {
   align-items: center;
   justify-content: center;
   background-color: #292A2D;
+}
+
+#notification {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  width: 200px;
+  padding: 20px;
+  border-radius: 5px;
+  background-color: white;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+}
+
+.hidden {
+  display: none;
 }
 </style>

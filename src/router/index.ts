@@ -27,6 +27,10 @@ const router = createRouter({
             path: '/test_mark', 
             component: () => import("../components/demo/test_mark.vue") 
         },
+        { 
+            path: '/update', 
+            component: () => import("../components/update/update.vue") 
+        },
     ], // `routes: routes` 的缩写
 })
 
