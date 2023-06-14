@@ -30,8 +30,8 @@
       <p style="position: fixed;right: 10px;bottom: 0;">当前版本：<span ref="version"></span></p>
       <div id="notification" ref="notification" class="hidden">
         <p ref="message" style="color: #292A2D;"></p>
-        <button ref="close-button" @click="closeNotification()">下次再说</button>
-        <button ref="restartButton" @Click="restartApp()" class="hidden">重启更新</button>
+        <button @click="closeNotification()">下次再说</button>
+        <button @click="updateNow()">立即更新</button>
       </div>
     </div>
   </div>
@@ -48,7 +48,6 @@ import { ElMessage } from 'element-plus'
 const version = ref();
 const message = ref();
 const notification = ref();
-const restartButton = ref();
 
 const router = useRouter();
 
@@ -125,47 +124,52 @@ ipcRenderer.on('app_version', (event, arg) => {
 //新版本检测
 console.log("开始新版本检测")
 ipcRenderer.send('checkForUpdate');
-//发现新版本
-ipcRenderer.on('checking_for', () => {
-  console.log("进入发现新版本")
-  message.value.innerText = '发现新版本';
+ipcRenderer.on('checking_for', (event,msg) => {
+  console.log("checking_for",msg)
+  message.value.innerText = msg;
   notification.value.classList.remove('hidden');
 });
-ipcRenderer.on('UpdateMessage', (arg) => {
-  console.log('arg',arg);
-  notification.value.classList.remove('hidden');
-});
-//发现新版本
+// 发现新版本
 ipcRenderer.on('update_available', () => {
-  console.log("正在下载中...")
-  message.value.innerText = '正在下载中...';
+  console.log("发现新版本")
+  message.value.innerText = '发现新版本！是否更新?';
   notification.value.classList.remove('hidden');
 });
-//下载成功触发
-ipcRenderer.on('update_downloaded', () => {
-  ipcRenderer.removeAllListeners('update_downloaded');
-  message.value.innerText = '下载成功！是否更新?';
-  restartButton.value.classList.remove('hidden');
+// 没发现新版本
+ipcRenderer.on('update-not-available', () => {
+  console.log("没发现新版本")
+  message.value.innerText = '现在使用的就是最新版本，不用更新';
   notification.value.classList.remove('hidden');
 });
+// //下载成功触发
+// ipcRenderer.on('update_downloaded', () => {
+//   ipcRenderer.removeAllListeners('update_downloaded');
+//   message.value.innerText = '下载成功！是否更新?';
+//   notification.value.classList.remove('hidden');
+// });
 //下载中触发
 ipcRenderer.on("downloadProgress", (event, progressObj) => {
-  console.log(progressObj);
+  console.log('downloadProgress',progressObj);
   let downloadPercent = progressObj.percent || 0;
   message.value.innerText = "正在下载..." + downloadPercent;
 });
+// 更新時触发消息
+ipcRenderer.on('UpdateMessage', (arg) => {
+  console.log('UpdateMessage',arg);
+  notification.value.classList.remove('hidden');
+});
 // 下载异常触发
-ipcRenderer.on('checking_error', (arg) => {
-  console.log('arg',arg)
+ipcRenderer.on('updateError', (arg) => {
+  console.log('updateError',arg)
   message.value.innerText = '更新失败请检测网络';
   notification.value.classList.remove('hidden');
 });
-
+// 下次再说
 function closeNotification() {
   notification.value.classList.add('hidden');
 }
-
-function restartApp() {
+// 立即更新
+function updateNow() {
   ipcRenderer.send('isUpdateNow');
 }
 </script>

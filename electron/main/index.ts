@@ -64,7 +64,7 @@ async function createWindow() {
   // win.webContents.on('will-navigate', (event, url) => { }) #344
 }
 
-app.whenReady().then(()=>{
+app.whenReady().then(() => {
   createWindow();
   updateHandle();
 });
@@ -121,80 +121,31 @@ ipcMain.on('close-app', () => {
 //   updateAva: '检测到新版本，正在下载……',
 //   updateNotAva: '现在使用的就是最新版本，不用更新'
 // }
-// // 设置是否自动下载，默认是true,当点击检测到新版本时，会自动下载安装包，所以设置为false
-// autoUpdater.autoDownload = false
-// // 设置服务器更新地址
-// autoUpdater.setFeedURL({
-//   provider: 'generic',
-//   url: updateUrl + '/v' + app.getVersion() + '/'
-// })
-
-// // autoUpdater.checkForUpdatesAndNotify(); // 自动检测更新并下载安装
-
-// // 触发更新检测
-// ipcMain.on('checkForUpdates', () => {
-//   console.log('checkForUpdates');
-//   autoUpdater.checkForUpdates();
-//   // autoUpdater error检测
-//   autoUpdater.on('error', function (err) {
-//     console.log('error', err);
-//     sendUpdateMessage('error', err || message.error)
-//   })
-//   autoUpdater.on('checking-for-update', function () {
-//     sendUpdateMessage('checking-for-update', message.checking)
-//   })
-//   // 版本检测结束，准备更新
-//   autoUpdater.on('update-available', function (info) {
-//     console.log('update-available');
-//     sendUpdateMessage('update-available', message.updateAva)
-//   })
-//   autoUpdater.on('update-not-available', function (info) {
-//     console.log('update-not-available');
-//     sendUpdateMessage('update-not-available', message.updateNotAva)
-//   })
-// })
-// // 更新下载进度事件
-// autoUpdater.on('download-progress', function (progressObj) {
-//   sendUpdateMessage('download-progress', progressObj.percent)
-// })
-// // 下载完成
-// // autoUpdater.on('update-downloaded', function (event: any, releaseNotes: any, releaseName: any, releaseDate: any, updateUrl: any, quitAndUpdate: any) {
-// autoUpdater.on('update-downloaded', function () {
-//   sendUpdateMessage('update-downloaded', '下载完成')
-// })
-
-// // 通过main进程发送事件给renderer进程，提示更新信息
-// function sendUpdateMessage(name: string, text: string | number | Error) {
-//   win.webContents.send('UpdateMessage', { name, text })
-// }
-// //  开始下载，通过渲染进程发起
-// ipcMain.on('downloadUpdate', () => {
-//   autoUpdater.downloadUpdate()
-// })
-
-// //  下载完成，退出且重新安装  
-// ipcMain.on('updateSuccess', () => {
-//   // 加载更新程序
-//   autoUpdater.quitAndInstall()
-//   // 关闭当前electron
-//   app.quit()
-// })
-
 
 //检测更新
 function updateHandle() {
   // 服务器静态文件地址，文章后面附上ng配置及需要上传的文件
-  const updateUrl = 'https://github.com/GershonWang/chat/releases/download/'
+  // const updateUrl = 'https://github.com/GershonWang/chat/releases/download/'
   // 设置检查更新地址
-  autoUpdater.setFeedURL(updateUrl);
+  // autoUpdater.setFeedURL(updateUrl);
+
+  // 设置更新源为GitHub Release
+  autoUpdater.setFeedURL({
+    provider: 'github',
+    owner: 'GershonWang',
+    repo: 'chat',
+    releaseType: 'release'
+  })
+  // 设置不自动下载
+  autoUpdater.autoDownload = false;
   // 登录页面加载后触发此更新
-  ipcMain.on("checkForUpdate",()=>{
-      //执行自动更新检查
-      autoUpdater.checkForUpdates();
+  ipcMain.on("checkForUpdate", () => {
+    //执行自动更新检查
+    autoUpdater.checkForUpdates();
   })
   // 更新出现异常
   autoUpdater.on('error', function (error) {
-    win.webContents.send('checking_error', error)
+    win.webContents.send('updateError', error)
   });
   // 开始检测更新
   autoUpdater.on('checking-for-update', function () {
@@ -204,33 +155,35 @@ function updateHandle() {
   // 当发现一个可用更新的时候触发，更新包下载会自动开始
   autoUpdater.on('update-available', function (info) {
     win.webContents.send('update_available')
-    autoUpdater.downloadUpdate().then((path)=>{
-      console.log('download path', path)
-    }).catch((e)=>{
-      console.log(e)
-    })
   });
   //当没有可用更新的时候触发
   autoUpdater.on('update-not-available', function (info) {
-    console.log("当前没有可用更新")
+    win.webContents.send('update-not-available')
   });
   // 更新下载进度事件
   autoUpdater.on('download-progress', function (progressObj) {
-    console.log(progressObj)
     win.webContents.send('downloadProgress', progressObj)
   })
-  //安装包下载完成
-  autoUpdater.on('update-downloaded', function () {
-    win.webContents.send('update_downloaded')
-    ipcMain.on('isUpdateNow', (e, arg) =>{
-      console.log(arg);
-      console.log("开始更新");
-      //退出并安装
-      autoUpdater.quitAndInstall();
-    });
-  });
-  //获取当前版本
+  // 安装包下载完成
+  // autoUpdater.on('update-downloaded', function () {
+  //   win.webContents.send('update_downloaded')
+  //   ipcMain.on('isUpdateNow', (e, arg) =>{
+  //     console.log(arg);
+  //     console.log("开始更新");
+  //     //退出并安装
+  //     autoUpdater.quitAndInstall();
+  //   });
+  // });
+  // 获取当前版本
   ipcMain.on('app_version', (event) => {
     event.sender.send('app_version', { version: app.getVersion() });
   });
+  // 立即更新
+  ipcMain.on('isUpdateNow', (event) => {
+    autoUpdater.downloadUpdate().then((path) => {
+      event.sender.send('UpdateMessage', path);
+    }).catch((e) => {
+      event.sender.send('updateError', e);
+    })
+  })
 }

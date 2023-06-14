@@ -1,18 +1,11 @@
 {
   "name": "chat",
-  "version": "2.0.5",
+  "version": "2.0.7",
   "main": "dist-electron/main/index.js",
   "description": "一个聊天工具客户端",
   "author": "Jokul <986432015@qq.com>",
   "license": "MIT",
   "private": true,
-  "keywords": [
-    "electron",
-    "rollup",
-    "vite",
-    "vue3",
-    "vue"
-  ],
   "debug": {
     "env": {
       "VITE_DEV_SERVER_URL": "http://127.0.0.1:3344/"
