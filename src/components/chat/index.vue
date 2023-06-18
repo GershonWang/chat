@@ -41,7 +41,7 @@
     </el-container>
     <div class="bottom-title">
       <div class="run-title">
-        本作者是后台开发从业者，前端页面是一边学习一边开发，如有不足之处，敬请提issue，作者尽能力改善！！
+        本作者是后台开发从业者，前端页面是一边学习一边开发，如有不足之处，敬请提<a href="https://github.com/GershonWang/chat/issues" target="_blank">issue</a>，作者尽能力改善！！
       </div>
     </div>
   </el-container>

@@ -30,7 +30,7 @@ async function createWindow() {
     icon: join(process.env.PUBLIC, 'logo.png'), // 设置图标路径(ICO、PNG、JPEG、BMP)
     width: 900,
     height: 500,
-    // frame: false, // 隐藏标题栏
+    frame: false, // 隐藏标题栏
     webPreferences: {
       preload,
       nodeIntegration: true,
