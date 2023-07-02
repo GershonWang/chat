@@ -94,7 +94,9 @@ let itemId = 1;
 const autoScroll = () => {
   if (containMain.value != null) {
     // 获取dom元素的高度并赋值给scrollTop,实现滚动条移动到最底部
-    (containMain.value as unknown as HTMLElement).scrollTop = (containMain.value as unknown as HTMLElement).scrollHeight;
+    const contain = containMain.value as unknown as HTMLElement;
+    contain.scrollTop = contain.scrollHeight;
+    // (containMain.value as unknown as HTMLElement).scrollTop = (containMain.value as unknown as HTMLElement).scrollHeight;
   }
 }
 
@@ -159,6 +161,14 @@ const sendQue = async () => {
   };
   state.items.push(newItem)
   state.items = [...state.items] // 强制更新
+
+  if (containMain.value != null) {
+    // 获取dom元素的高度并赋值给scrollTop,实现滚动条移动到最底部
+    const contain = containMain.value as unknown as HTMLElement;
+    console.log("contain.scrollHeight",contain.scrollHeight);
+    console.log("contain.scrollTop",contain.scrollTop);
+  }
+
   autoScroll() // 自动滚动
   itemId++; // itemId加1
   /* 3.建立SSE网络连接,并将缓存中的uid传入请求头 */
