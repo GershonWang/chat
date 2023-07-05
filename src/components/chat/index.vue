@@ -49,7 +49,7 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { Ref, reactive, ref } from 'vue'
+import { Ref, reactive, ref, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import { StarFilled } from '@element-plus/icons-vue'
 import { ipcRenderer } from 'electron'
@@ -77,7 +77,8 @@ interface State {
 
 const textarea: Ref<string> = ref('')
 const isDisabled: Ref<boolean> = ref(false)
-const containMain: Ref<HTMLElement | null> = ref(null)
+// const containMain: Ref<HTMLElement | null> = ref(null)
+const containMain = ref<InstanceType<typeof HTMLElement>>()
 const textareaRef: Ref<HTMLElement | null> = ref(null)
 const child: Ref<HTMLElement | null> = ref(null)
 const showImg: Ref<boolean> = ref(false)
@@ -92,12 +93,9 @@ let itemId = 1;
  * 自动滚动
  */
 const autoScroll = () => {
-  if (containMain.value != null) {
     // 获取dom元素的高度并赋值给scrollTop,实现滚动条移动到最底部
     const contain = containMain.value as unknown as HTMLElement;
     contain.scrollTop = contain.scrollHeight;
-    // (containMain.value as unknown as HTMLElement).scrollTop = (containMain.value as unknown as HTMLElement).scrollHeight;
-  }
 }
 
 /**
@@ -162,14 +160,10 @@ const sendQue = async () => {
   state.items.push(newItem)
   state.items = [...state.items] // 强制更新
 
-  if (containMain.value != null) {
-    // 获取dom元素的高度并赋值给scrollTop,实现滚动条移动到最底部
-    const contain = containMain.value as unknown as HTMLElement;
-    console.log("contain.scrollHeight",contain.scrollHeight);
-    console.log("contain.scrollTop",contain.scrollTop);
-  }
-
-  autoScroll() // 自动滚动
+  nextTick(() => {
+    autoScroll() // 自动滚动
+  });
+  
   itemId++; // itemId加1
   /* 3.建立SSE网络连接,并将缓存中的uid传入请求头 */
   const eventSource = new EventSourcePolyfill(import.meta.env.VITE_BASE_URL + '/createSse', {
@@ -206,7 +200,7 @@ const sendQue = async () => {
   };
   /* 3.2 发送消息 */
   eventSource.onmessage = (event) => {
-    console.log('onmessage', event);
+    // console.log('onmessage', event);
     if (event.lastEventId == "[DONE]") {
       event.target.close(); // 关闭sse连接
       state.items = [...state.items] // 强制更新
