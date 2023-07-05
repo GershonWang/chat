@@ -7,7 +7,10 @@
         <el-main class="container-main">
           <div class="containMain" ref="containMain">
             <div class="backdrop" v-for="item in state.items" :key="item.id">
-              <div><a class="title">{{ item.text }}</a></div>
+              <div class="titleDiv" @mouseover="item.showTip = true;" @mouseout="item.showTip = false;">
+                <a class="title">{{ item.text }}</a>
+              </div>
+              <div class="tooltip" v-if="item.showTip">{{ item.text }}</div>
               <!-- <hr> 添加一条分界线 -->
               <el-divider>
                 <el-icon><star-filled /></el-icon>
@@ -63,6 +66,7 @@ const router = useRouter();
 interface Item {
   id: number;
   text: string;
+  showTip: boolean;
   showChild: boolean;
   warnText: string;
   showImage: boolean;
@@ -77,12 +81,12 @@ interface State {
 
 const textarea: Ref<string> = ref('')
 const isDisabled: Ref<boolean> = ref(false)
-// const containMain: Ref<HTMLElement | null> = ref(null)
 const containMain = ref<InstanceType<typeof HTMLElement>>()
 const textareaRef: Ref<HTMLElement | null> = ref(null)
 const child: Ref<HTMLElement | null> = ref(null)
 const showImg: Ref<boolean> = ref(false)
 const bigImgSrc: Ref<string> = ref('')
+
 const state: State = reactive<State>({
   items: []
 });
@@ -150,6 +154,7 @@ const sendQue = async () => {
   const newItem: Item = {
     id: itemId,
     text: inputMsg,
+    showTip: false,
     showChild: false,
     warnText: '',
     showImage: false,
@@ -240,10 +245,6 @@ const sendQue = async () => {
     isDisabled.value = false; // 重新启用(输入框/发送按钮)
     (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
   };
-  // 监听函数
-  // eventSource.addEventListener("customEventName", (event) => {
-  //   console.log("Message id is " + event);
-  // });
 }
 
 /**
@@ -252,18 +253,6 @@ const sendQue = async () => {
 const closeApp = () => {
   ipcRenderer.send('close-app');
 }
-/**
- * 鼠标移除移出监听事件
- */
-// const elements = document.getElementsByClassName('run-title');
-// const element = elements[0];
-// const element = document.querySelector('run-title');
-// (element as HTMLElement).addEventListener('mouseenter',()=> {
-//   (element as HTMLElement).style.animationPlayState = 'paused';
-// });
-// element.addEventListener('mouseleave',()=> {
-//   element.style.animationPlayState = 'running';
-// });
 </script>
 
 <style scoped>
@@ -309,10 +298,28 @@ const closeApp = () => {
   padding: 15px;
 }
 
+.titleDiv {
+  white-space: nowrap; /* 防止文字换行 */
+  overflow: hidden; /* 超出宽度部分隐藏 */
+  text-overflow: fade; /* 超出宽度部分显示省略号 */
+}
+
 .title {
   color: #008000;
-  font-size: 24px;
+  font-size: 18px;
   font-weight: bold;
+}
+
+.tooltip {
+  position: absolute;
+  width: 95%;
+  background-color: white;
+  font-weight: bold;
+  color: #000;
+  border-radius: 15px;
+  z-index: 99;
+  padding: 5px 10px;
+  overflow-wrap: break-word;
 }
 
 .comtainer-footer {
@@ -333,15 +340,26 @@ const closeApp = () => {
 
 .run-title {
   animation: scroll 50s linear infinite;
+  display: inline-block;
+  text-align: left;
+  width: max-content;
+}
+
+.run-title:hover {
+  animation-play-state: paused;
+}
+
+.run-title:not(:hover) {
+  animation-play-state: running;
 }
 
 @keyframes scroll {
   0% {
-    transform: translateX(100%);
+    transform: translateX(180%);
   }
 
   100% {
-    transform: translateX(-100%);
+    transform: translateX(-180%);
   }
 }
 </style>
