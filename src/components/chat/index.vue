@@ -44,7 +44,8 @@
     </el-container>
     <div class="bottom-title">
       <div class="run-title">
-        本作者是后台开发从业者，前端页面是一边学习一边开发，如有不足之处，敬请提<a href="https://github.com/GershonWang/chat/issues" target="_blank">issue</a>，作者尽能力改善！！
+        本作者是后台开发从业者，前端页面是一边学习一边开发，如有不足之处，敬请提<a href="https://github.com/GershonWang/chat/issues"
+          target="_blank">issue</a>，作者尽能力改善！！
       </div>
     </div>
   </el-container>
@@ -97,9 +98,11 @@ let itemId = 1;
  * 自动滚动
  */
 const autoScroll = () => {
-    // 获取dom元素的高度并赋值给scrollTop,实现滚动条移动到最底部
-    const contain = containMain.value as unknown as HTMLElement;
+  // 获取dom元素的高度并赋值给scrollTop,实现滚动条移动到最底部
+  const contain = containMain.value as unknown as HTMLElement;
+  if(contain != null) {
     contain.scrollTop = contain.scrollHeight;
+  }
 }
 
 /**
@@ -168,7 +171,7 @@ const sendQue = async () => {
   nextTick(() => {
     autoScroll() // 自动滚动
   });
-  
+
   itemId++; // itemId加1
   /* 3.建立SSE网络连接,并将缓存中的uid传入请求头 */
   const eventSource = new EventSourcePolyfill(import.meta.env.VITE_BASE_URL + '/createSse', {
@@ -299,9 +302,12 @@ const closeApp = () => {
 }
 
 .titleDiv {
-  white-space: nowrap; /* 防止文字换行 */
-  overflow: hidden; /* 超出宽度部分隐藏 */
-  text-overflow: fade; /* 超出宽度部分显示省略号 */
+  white-space: nowrap;
+  /* 防止文字换行 */
+  overflow: hidden;
+  /* 超出宽度部分隐藏 */
+  text-overflow: ellipsis;
+  /* 超出宽度部分显示省略号 */
 }
 
 .title {
