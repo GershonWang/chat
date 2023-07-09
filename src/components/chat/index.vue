@@ -16,14 +16,14 @@
                 <el-icon><star-filled /></el-icon>
               </el-divider>
               <div ref="child">
-                <div v-if="item.showChild" style="margin-top: 25px;">
-                  <a style="color:red;">{{ item.warnText }}</a>
-                </div>
                 <div v-if="item.showImage" style="margin-top: 25px;">
                   <img :src="item.imageUrl" @click="isShowImage(item.imageUrl)" style="width: 300px;">
                 </div>
                 <div v-if="item.showMarkdown">
-                  <MarkdownRenderer :markdown="item.childText"></MarkdownRenderer>
+                  <MarkdownRenderer :markdown="item.childText" :num="item.id"></MarkdownRenderer>
+                </div>
+                <div v-if="item.showChild" style="margin-top: 25px;">
+                  <a style="color:red;">{{ item.warnText }}</a>
                 </div>
               </div>
             </div>
@@ -210,6 +210,10 @@ const sendQue = async () => {
   eventSource.onmessage = (event) => {
     // console.log('onmessage', event);
     if (event.lastEventId == "[DONE]") {
+      const endText = newItem.childText;
+      const lastIndex = endText.lastIndexOf(' <br/>');
+      newItem.childText = endText.substring(0,lastIndex);
+      console.log('newItem.childText',newItem.childText);
       event.target.close(); // 关闭sse连接
       state.items = [...state.items] // 强制更新
       autoScroll() // 自动滚动
@@ -302,12 +306,9 @@ const closeApp = () => {
 }
 
 .titleDiv {
-  white-space: nowrap;
-  /* 防止文字换行 */
-  overflow: hidden;
-  /* 超出宽度部分隐藏 */
-  text-overflow: ellipsis;
-  /* 超出宽度部分显示省略号 */
+  white-space: nowrap; /* 防止文字换行 */
+  overflow: hidden; /* 超出宽度部分隐藏 */
+  text-overflow: ellipsis; /* 超出宽度部分显示省略号 */
 }
 
 .title {

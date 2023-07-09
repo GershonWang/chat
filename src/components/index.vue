@@ -77,7 +77,6 @@ const submitForm = async (formEl: FormInstance | undefined) => {
         'password': loginForm.password
       }
       loginApi(data).then(res => {
-        console.log('loginApi', res)
         if (res.data.code == '500') {
           ElMessage.warning(res.data.message);
         } else if (res.data.code == '000') {
