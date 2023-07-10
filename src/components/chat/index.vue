@@ -36,6 +36,7 @@
             input-style="width:600px;background-color:#2D333B;color:white;margin-right: 30px;" />
           <el-button type="success" @click="sendQue()" :disabled="isDisabled"
             style="color: white;font-weight: bold;background-color: blueviolet;">发送(Ctrl+Enter)</el-button>
+          <el-button type="danger" @click="stopSend" :disabled="isStopDisabled" style="color: white;font-weight: bold;">停止发送</el-button>
           <el-button @click="router.back()">返回登陆</el-button>
           <el-button type="danger" round><a @click="closeApp">关闭程序</a></el-button>
         </el-footer>
@@ -58,7 +59,7 @@ import { ElMessage } from 'element-plus'
 import { StarFilled } from '@element-plus/icons-vue'
 import { ipcRenderer } from 'electron'
 import { EventSourcePolyfill } from "event-source-polyfill";
-import { chatApi } from '@/api/chat'
+import { chatApi, closeChatApi } from '@/api/chat'
 import MarkdownRenderer from '@/renderer/MarkdownRenderer.vue';
 import BigImg from '@/renderer/ImageViewRenderer.vue'
 
@@ -82,6 +83,7 @@ interface State {
 
 const textarea: Ref<string> = ref('')
 const isDisabled: Ref<boolean> = ref(false)
+const isStopDisabled: Ref<boolean> = ref(true)
 const containMain = ref<InstanceType<typeof HTMLElement>>()
 const textareaRef: Ref<HTMLElement | null> = ref(null)
 const child: Ref<HTMLElement | null> = ref(null)
@@ -98,11 +100,13 @@ let itemId = 1;
  * 自动滚动
  */
 const autoScroll = () => {
-  // 获取dom元素的高度并赋值给scrollTop,实现滚动条移动到最底部
-  const contain = containMain.value as unknown as HTMLElement;
-  if(contain != null) {
-    contain.scrollTop = contain.scrollHeight;
-  }
+  nextTick(() => {
+    // 获取dom元素的高度并赋值给scrollTop,实现滚动条移动到最底部
+    const contain = containMain.value as unknown as HTMLElement;
+    if(contain != null) {
+      contain.scrollTop = contain.scrollHeight;
+    }
+  });
 }
 
 /**
@@ -168,11 +172,9 @@ const sendQue = async () => {
   state.items.push(newItem)
   state.items = [...state.items] // 强制更新
 
-  nextTick(() => {
-    autoScroll() // 自动滚动
-  });
-
+  autoScroll() // 自动滚动
   itemId++; // itemId加1
+
   /* 3.建立SSE网络连接,并将缓存中的uid传入请求头 */
   const eventSource = new EventSourcePolyfill(import.meta.env.VITE_BASE_URL + '/createSse', {
     headers: { 'uid': uid },
@@ -181,10 +183,12 @@ const sendQue = async () => {
   /* 3.1 打开连接 */
   eventSource.onopen = (event) => {
     console.log("开始输出后端返回值", event);
+    isStopDisabled.value = false // 启用停止按钮
     ////////////////////////////////// 发送提问chat请求 /////////////////////////////////
     if (uid == null) {
       ElMessage.success("获取缓存中的uuid失败！");
       isDisabled.value = false; // 重新启用(输入框/发送按钮)
+      isStopDisabled.value = true; // 禁用停止按钮
       (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
       return;
     }
@@ -192,16 +196,18 @@ const sendQue = async () => {
       console.log('chatApi响应结果', res);
     }).catch(async res => {
       console.log('接口报错打印', res)
+      // closeChatApi(<string>uid);
       newItem.showChild = true;
       const errorMsg = '网络请求异常，请再次尝试!';
       for (let i = 0; i < errorMsg.length; i++) {
         newItem.warnText += errorMsg[i];
         state.items = [...state.items] // 强制更新
         autoScroll() // 自动滚动
-        await sleep(10);
+        await sleep(100);
       }
       event.target.close(); // 关闭sse连接
       isDisabled.value = false; // 重新启用(输入框/发送按钮)
+      isStopDisabled.value = true; // 禁用停止按钮
       (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
     })
     ////////////////////////////////// 发送提问chat请求 /////////////////////////////////
@@ -209,27 +215,37 @@ const sendQue = async () => {
   /* 3.2 发送消息 */
   eventSource.onmessage = (event) => {
     // console.log('onmessage', event);
+    if (event.lastEventId == "[IMG]") {
+      newItem.imageUrl = new URL(event.data, import.meta.url).href;
+      newItem.showImage = true;
+      state.items = [...state.items] // 强制更新
+      autoScroll() // 自动滚动
+      return;
+    }
+    // 获取token
+    if (event.lastEventId == "[TOKENS]") {
+      newItem.childText += event.data;
+      state.items = [...state.items] // 强制更新
+      autoScroll() // 自动滚动
+      return;
+    }
+    // 判断结尾
     if (event.lastEventId == "[DONE]") {
+      newItem.childText += event.data;
       const endText = newItem.childText;
-      const lastIndex = endText.lastIndexOf(' <br/>');
-      newItem.childText = endText.substring(0,lastIndex);
+      const lastIndex = endText.lastIndexOf(event.data);
+      newItem.childText = endText.substring(0,lastIndex) + "（BPE）";
       console.log('newItem.childText',newItem.childText);
       event.target.close(); // 关闭sse连接
       state.items = [...state.items] // 强制更新
       autoScroll() // 自动滚动
       isDisabled.value = false; // 重新启用(输入框/发送按钮)
+      isStopDisabled.value = true; // 禁用停止按钮
       (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
       return;
     }
     let json_data = JSON.parse(event.data)
-    if (json_data.content == null || json_data.content == 'null') {
-      return;
-    }
-    if (event.lastEventId == '' && json_data.content.includes('https')) {
-      newItem.imageUrl = new URL(json_data.content, import.meta.url).href;
-      newItem.showImage = true;
-      state.items = [...state.items] // 强制更新
-      autoScroll() // 自动滚动
+    if (json_data.content == null || json_data.content == "null") {
       return;
     }
     newItem.showMarkdown = true;
@@ -246,12 +262,27 @@ const sendQue = async () => {
       newItem.warnText += errorMsg[i];
       state.items = [...state.items] // 强制更新
       autoScroll() // 自动滚动
-      await sleep(10);
+      await sleep(100);
     }
     event.target.close();
     isDisabled.value = false; // 重新启用(输入框/发送按钮)
+    isStopDisabled.value = true; // 禁用停止按钮
     (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
   };
+}
+
+/**
+ * 关闭正在进行中的会话
+ */
+const stopSend = () => {
+  /* 1.获取缓存中的uuid,并判断是否为空 */
+  let uid: string | null = localStorage.getItem('uid');
+  if (uid == null) {
+    ElMessage.success("获取缓存中的uuid失败！");
+    return;
+  }
+  console.log("请求关闭会话时获取到的uid", uid);
+  closeChatApi(uid);
 }
 
 /**

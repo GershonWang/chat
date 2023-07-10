@@ -88,57 +88,60 @@ export default defineComponent({
         const elem = (document.querySelectorAll(".containMain")[0].children)[this.num - 1];
         const codeDoms = elem.querySelectorAll('pre');
         Array.from(codeDoms).forEach((item, index) => {
-          let i = document.createElement("i")
-          i.setAttribute('class', 'el-icon-copy-document hljs-copy' + this.num + index)
-          i.setAttribute('data-clipboard-action', 'copy')
-          let dom = i.cloneNode(false)
-          let i_text = document.createTextNode("一键复制");
-          (dom as unknown as HTMLElement).appendChild(i_text);
-          (dom as unknown as HTMLElement).setAttribute('data-clipboard-target', '#copy' + this.num + index);
-          item.appendChild(dom);
-          // 添加行号
-          let child = item.children[0];
-          child.setAttribute('id', "copy" + this.num + index);
-          // 计算行号数(包含了一行空和一行复制，所以要减去2)
-          let num = item.innerText.split('\n').length - 2
-          let ul = document.createElement("ul");
-          ul.setAttribute('class', 'hljs-code-number')
-          for (let i = 0; i < num; i++) {
-            let n = i+1
-            let childLi = document.createElement("li")
-            let li_text = document.createTextNode(<string><unknown>n);
-            childLi.appendChild(li_text)
-            ul.appendChild(childLi)
+          if (item.children && item.children.length > 0) {
+            // 计算行号数(包含了一行空和一行复制，所以要减去2)
+            let num = item.innerText.split('\n').length - 1
+            let ul = document.createElement("ul");
+            ul.setAttribute('class', 'hljs-code-number')
+            for (let i = 0; i < num; i++) {
+              let childLi = document.createElement("li")
+              let li_text = document.createTextNode(<string><unknown>(i + 1));
+              childLi.appendChild(li_text)
+              ul.appendChild(childLi)
+            }
+            item.appendChild(ul)
+
+            if (this.markdown.endsWith('（BPE）')) {
+              // 一键复制标签元素
+              let i = document.createElement("i")
+              i.setAttribute('class', 'el-icon-copy-document hljs-copy' + this.num + index)
+              i.setAttribute('data-clipboard-action', 'copy')
+              let dom = i.cloneNode(false)
+              let i_text = document.createTextNode("一键复制");
+              (dom as unknown as HTMLElement).appendChild(i_text);
+              (dom as unknown as HTMLElement).setAttribute('data-clipboard-target', '#copy' + this.num + index);
+              item.appendChild(dom);
+              let child = item.children[0];
+              child.setAttribute('id', "copy" + this.num + index);
+              // 添加复制响应事件
+              (this.clipboard as unknown as Clipboard) = new Clipboard('.hljs-copy' + this.num + index);
+              (this.clipboard as unknown as Clipboard).on('success', e => {
+                ElMessage.success("复制成功");
+                e.clearSelection();  // 清除文本的选中状态
+              });
+              (this.clipboard as unknown as Clipboard).on('error', e => {
+                ElMessage.success("复制失败");
+                e.clearSelection();  // 清除文本的选中状态
+              });
+              // 代码类型标签元素
+              const className = item.children[0].className;
+              const classArr = className.split(' ');
+              Array.from(classArr).forEach((name:String) => {
+                if (name.includes('language-') && name.split('-').length > 1) {
+                  const langName = name.split('-')[1];
+                  let langI = document.createElement("a")
+                  let langDom = langI.cloneNode(false)
+                  let lang = document.createTextNode(langName);
+                  (langDom as unknown as HTMLElement).appendChild(lang);
+                  (langDom as unknown as HTMLElement).setAttribute('class', 'lang-cols');
+                  item.appendChild(langDom);
+                }
+              });
+            }
           }
-          item.appendChild(ul)
-          // 添加代码类型
-          if(item.children != undefined && item.children.length > 0 && item.children[0].tagName == 'CODE') {
-            const className = item.children[0].className;
-            const classArr = className.split(' ');
-            Array.from(classArr).forEach((name:String) => {
-              if (name.includes('language-') && name.split('-').length > 1) {
-                const langName = name.split('-')[1];
-                let langI = document.createElement("a")
-                let langDom = langI.cloneNode(false)
-                let lang = document.createTextNode(langName);
-                (langDom as unknown as HTMLElement).appendChild(lang);
-                (langDom as unknown as HTMLElement).setAttribute('class', 'lang-cols');
-                item.appendChild(langDom);
-              }
-            });
-          }
-          if(this.markdown.endsWith(' <br/>')) {
-            // 添加复制响应事件
-            (this.clipboard as unknown as Clipboard) = new Clipboard('.hljs-copy' + this.num + index);
-            (this.clipboard as unknown as Clipboard).on('success', e => {
-              ElMessage.success("复制成功");
-              e.clearSelection();  // 清除文本的选中状态
-            });
-            (this.clipboard as unknown as Clipboard).on('error', e => {
-              ElMessage.success("复制失败");
-              e.clearSelection();  // 清除文本的选中状态
-            });
-          }
+
+
+          
         });
       })
     },
