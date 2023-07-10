@@ -28,7 +28,7 @@ const add100 = async () => {
   <el-icon size="50" color="red"><i-ep-chatDotRound /></el-icon>
   <el-button type="success" @click="goBack">返回上一层</el-button>
   <el-input v-model="myMarkdown" :rows="2" type="textarea" style="width: 450px;margin-top: 30px;"></el-input>
-  <MarkdownRenderer :markdown="myMarkdown" />
+  <MarkdownRenderer :markdown="myMarkdown" :num="1"/>
 </template>
 
 <style scoped>
