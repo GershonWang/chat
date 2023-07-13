@@ -2,7 +2,7 @@
   <el-container class="container">
     <el-header class="container-title">ChatGPT(G版)</el-header>
     <el-container>
-      <el-aside class="container-menu"></el-aside>
+      <!-- <el-aside class="container-menu"></el-aside> -->
       <el-container>
         <el-main class="container-main">
           <div class="containMain" ref="containMain">
@@ -37,11 +37,15 @@
           <el-button type="success" @click="sendQue()" :disabled="isDisabled"
             style="color: white;font-weight: bold;background-color: blueviolet;">发送(Ctrl+Enter)</el-button>
           <el-button type="danger" @click="stopSend" :disabled="isStopDisabled" style="color: white;font-weight: bold;">停止发送</el-button>
+          <el-button @click="reset()" style="color: black;font-weight: bold;">清空</el-button>
           <el-button @click="router.back()">返回登陆</el-button>
           <el-button type="danger" round><a @click="closeApp">关闭程序</a></el-button>
         </el-footer>
       </el-container>
-      <el-aside class="container-menu"></el-aside>
+      <el-aside class="container-menu">
+        <h2 style="text-align: center;">历史问题</h2>
+        <ul class="quest_list"></ul>
+      </el-aside>
     </el-container>
     <div class="bottom-title">
       <div class="run-title">
@@ -175,6 +179,19 @@ const sendQue = async () => {
   autoScroll() // 自动滚动
   itemId++; // itemId加1
 
+  // 右侧菜单追加问题内容
+  var list = document.querySelector(".quest_list");
+  let li = document.createElement("li")
+  li.setAttribute("style","margin-buttom:12px");
+  let liDom = li.cloneNode(false);
+  let a = document.createElement("a");
+  a.setAttribute("onClick","setMsg()");
+  let aDom = a.cloneNode(false);
+  let lang = document.createTextNode(inputMsg);
+  (aDom as unknown as HTMLElement).appendChild(lang);
+  (liDom as unknown as HTMLElement).appendChild(aDom);
+  (list as unknown as HTMLElement).appendChild(liDom);
+
   /* 3.建立SSE网络连接,并将缓存中的uid传入请求头 */
   const eventSource = new EventSourcePolyfill(import.meta.env.VITE_BASE_URL + '/createSse', {
     headers: { 'uid': uid },
@@ -234,7 +251,7 @@ const sendQue = async () => {
       newItem.childText += event.data;
       const endText = newItem.childText;
       const lastIndex = endText.lastIndexOf(event.data);
-      newItem.childText = endText.substring(0,lastIndex) + "（BPE）";
+      newItem.childText = "\n" + endText.substring(0,lastIndex) + "（BPE）";
       console.log('newItem.childText',newItem.childText);
       event.target.close(); // 关闭sse连接
       state.items = [...state.items] // 强制更新
@@ -283,6 +300,14 @@ const stopSend = () => {
   }
   console.log("请求关闭会话时获取到的uid", uid);
   closeChatApi(uid);
+}
+
+/**
+ * 重置uuid以及数据
+ */
+const reset = () => {
+  localStorage.setItem('uid', uuid());
+  state.items = [];
 }
 
 /**
@@ -366,6 +391,11 @@ const closeApp = () => {
   align-items: center;
   justify-content: center;
   border: solid;
+}
+
+.quest_list {
+  list-style: none;
+  padding-inline: 12px;
 }
 
 .bottom-title {

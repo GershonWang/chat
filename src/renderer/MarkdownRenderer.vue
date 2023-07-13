@@ -85,23 +85,22 @@ export default defineComponent({
           hljs.highlightElement(ele);
         });
         // 生成代码块的一键复制按钮和行号
-        const elem = (document.querySelectorAll(".containMain")[0].children)[this.num - 1];
-        const codeDoms = elem.querySelectorAll('pre');
-        Array.from(codeDoms).forEach((item, index) => {
-          if (item.children && item.children.length > 0) {
-            // 计算行号数(包含了一行空和一行复制，所以要减去2)
-            let num = item.innerText.split('\n').length - 1
-            let ul = document.createElement("ul");
-            ul.setAttribute('class', 'hljs-code-number')
-            for (let i = 0; i < num; i++) {
-              let childLi = document.createElement("li")
-              let li_text = document.createTextNode(<string><unknown>(i + 1));
-              childLi.appendChild(li_text)
-              ul.appendChild(childLi)
-            }
-            item.appendChild(ul)
-
-            if (this.markdown.endsWith('（BPE）')) {
+        if (this.markdown.endsWith('（BPE）')) {
+          const elem = (document.querySelectorAll(".containMain")[0].children)[this.num - 1];
+          const codeDoms = elem.querySelectorAll('pre');
+          Array.from(codeDoms).forEach((item, index) => {
+            if (item.children && item.children.length > 0) {
+              // 计算行号数(包含了一行空和一行复制，所以要减去2)
+              // let num = item.innerText.split('\n').length - 1
+              // let ul = document.createElement("ul");
+              // ul.setAttribute('class', 'hljs-code-number')
+              // for (let i = 0; i < num; i++) {
+              //   let childLi = document.createElement("li")
+              //   let li_text = document.createTextNode(<string><unknown>(i + 1));
+              //   childLi.appendChild(li_text)
+              //   ul.appendChild(childLi)
+              // }
+              // item.appendChild(ul)
               // 一键复制标签元素
               let i = document.createElement("i")
               i.setAttribute('class', 'el-icon-copy-document hljs-copy' + this.num + index)
@@ -138,11 +137,8 @@ export default defineComponent({
                 }
               });
             }
-          }
-
-
-          
-        });
+          });
+        }
       })
     },
   },
@@ -249,10 +245,6 @@ export default defineComponent({
 
 pre {
   position: relative;
-}
-
-pre code {
-  padding-left: 50px !important;
 }
 
 .lang-cols {
