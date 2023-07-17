@@ -15,15 +15,14 @@
               <el-input v-model="loginForm.password" type="password" autocomplete="off" placeholder="请输入密码"
                 @keyup.enter="submitForm(loginFormRef)" />
             </el-form-item>
-            <el-form-item>
               <el-button type="primary" @click="submitForm(loginFormRef)">登陆账户</el-button>
               <el-button @click="resetForm(loginFormRef)">重新输入</el-button>
+              <el-button type="primary" @click="regist(loginFormRef)">注册账户</el-button>
               <el-button type="danger" round><a @click="closeApp">关闭程序</a></el-button>
-            </el-form-item>
+          <!-- <el-button type="success" round><router-link to="/demo">测试跳转</router-link></el-button> -->
+          <!-- <el-button type="success" round><router-link to="/update">测试update</router-link></el-button> -->
           </el-form>
         </el-card>
-        <!-- <el-button type="success" round><router-link to="/demo">测试跳转</router-link></el-button> -->
-        <!-- <el-button type="success" round><router-link to="/update">测试update</router-link></el-button> -->
       </el-main>
     </el-container>
     <div>
@@ -42,7 +41,7 @@ import { useRouter } from 'vue-router'
 import { reactive, ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ipcRenderer } from 'electron'
-import { loginApi } from '../api/auth'
+import { loginApi, registApi } from '../api/auth'
 import { ElMessage } from 'element-plus'
 
 const version = ref();
@@ -77,6 +76,30 @@ const submitForm = async (formEl: FormInstance | undefined) => {
         'password': loginForm.password
       }
       loginApi(data).then(res => {
+        if (res.data.code == '500') {
+          ElMessage.warning(res.data.message);
+        } else if (res.data.code == '000') {
+          localStorage.setItem('access_token', res.data.accessToken as string);
+          router.push('/chat');
+          ElMessage.success('欢迎您' + res.data.username + '，登陆成功！');
+        }
+      })
+    } else {
+      console.log('error submit!', fields)
+    }
+  })
+}
+
+const regist =async (formEl:FormInstance | undefined ) => {
+  if (!formEl) return
+  await formEl.validate((valid, fields) => {
+    if (valid) {
+      // 跳转聊天界面
+      const data = {
+        'username': loginForm.username,
+        'password': loginForm.password
+      }
+      registApi(data).then(res => {
         if (res.data.code == '500') {
           ElMessage.warning(res.data.message);
         } else if (res.data.code == '000') {
@@ -188,6 +211,10 @@ function updateNow() {
   align-items: center;
   justify-content: center;
   background-color: #292A2D;
+}
+
+.el-form-item {
+  margin-bottom: 30px;
 }
 
 #notification {

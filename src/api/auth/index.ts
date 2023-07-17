@@ -15,3 +15,16 @@ export function loginApi(data: LoginData): AxiosPromise<LoginResult> {
     params: data,
   });
 }
+
+/**
+ * 注册用户API
+ * @param data 用户信息
+ * @returns 
+ */
+export function registApi(data: LoginData): AxiosPromise<LoginResult> {
+  return request({
+    url: '/auth/addUser',
+    method: 'post',
+    params: data,
+  });
+}
