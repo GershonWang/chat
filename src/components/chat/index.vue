@@ -39,7 +39,7 @@
           <el-button type="danger" @click="stopSend" :disabled="isStopDisabled" style="color: white;font-weight: bold;">停止发送</el-button>
           <el-button @click="reset()" style="color: black;font-weight: bold;">清空</el-button>
           <el-button @click="router.back()">返回登陆</el-button>
-          <el-button type="danger" round><a @click="closeApp">关闭程序</a></el-button>
+          <!-- <el-button type="danger" round><a @click="closeApp">关闭程序</a></el-button> -->
         </el-footer>
       </el-container>
       <el-aside class="container-menu">

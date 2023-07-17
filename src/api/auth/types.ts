@@ -18,13 +18,17 @@ export interface LoginData {
    */
   export interface LoginResult {
     /**
+     * 返回的数据对象
+     */
+    data: any;
+    /**
      * 状态码
      */
     code?: string;
     /**
      * 信息
      */
-    message?: string;
+    msg?: string;
     /**
      * 访问token
      */
@@ -32,6 +36,6 @@ export interface LoginData {
     /**
      * 用户名
      */
-    username?: string;
+    name?: string;
 
   }

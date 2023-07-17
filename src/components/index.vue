@@ -6,19 +6,19 @@
       </el-header>
       <el-main style="margin: 0 auto;">
         <el-card class="box-card">
-          <el-form ref="loginFormRef" :model="loginForm" :rules="rules" status-icon label-width="100px">
+          <el-form ref="formRef" :model="loginForm" :rules="rules" status-icon label-width="100px">
             <el-form-item label="用户名" prop="username">
               <el-input v-model="loginForm.username" autocomplete="off" placeholder="请输入用户名"
                 @keyup.enter="handleUsernameEnter" />
             </el-form-item>
             <el-form-item label="密码" prop="password">
               <el-input v-model="loginForm.password" type="password" autocomplete="off" placeholder="请输入密码"
-                @keyup.enter="submitForm(loginFormRef)" />
+                @keyup.enter="submitForm(formRef)" />
             </el-form-item>
-              <el-button type="primary" @click="submitForm(loginFormRef)">登陆账户</el-button>
-              <el-button @click="resetForm(loginFormRef)">重新输入</el-button>
-              <el-button type="primary" @click="regist(loginFormRef)">注册账户</el-button>
-              <el-button type="danger" round><a @click="closeApp">关闭程序</a></el-button>
+              <el-button type="primary" @click="submitForm(formRef)">登陆账户</el-button>
+              <el-button type="info" @click="resetForm(formRef)">重新输入</el-button>
+              <el-button type="success" @click="registForm(formRef)">注册账户</el-button>
+              <!-- <el-button type="danger" round><a @click="closeApp">关闭程序</a></el-button> -->
           <!-- <el-button type="success" round><router-link to="/demo">测试跳转</router-link></el-button> -->
           <!-- <el-button type="success" round><router-link to="/update">测试update</router-link></el-button> -->
           </el-form>
@@ -44,13 +44,12 @@ import { ipcRenderer } from 'electron'
 import { loginApi, registApi } from '../api/auth'
 import { ElMessage } from 'element-plus'
 
+const router = useRouter();
 const version = ref();
 const message = ref();
 const notification = ref();
 
-const router = useRouter();
-
-const loginFormRef = ref<FormInstance>()
+const formRef = ref<FormInstance>()
 const loginForm = reactive({
   username: '',
   password: '',
@@ -58,17 +57,20 @@ const loginForm = reactive({
 
 const rules = reactive<FormRules>({
   username: [
-    { required: true, message: '用户名不能为空', trigger: 'blur' },
-    { min: 3, max: 5, message: '长度为3个到5个字符之间', trigger: 'blur' },
+    { required: true, message: '用户名不能为空', trigger: 'change' },
+    { min: 3, max: 5, message: '长度为3个到5个字符之间', trigger: ['blur','change'] },
   ],
-  password: [{ required: true, message: '密码不能为空', trigger: 'change' }],
+  password: [
+    { required: true, message: '密码不能为空', trigger: 'change' },
+    { pattern: /^[A-Za-z0-9_]+$/, message: '组件英文名称只能由 大小写字母、数字、下划线组成', trigger: 'blur' }
+  ],
 })
 /**
  * 提交表单数据(登陆系统)
  */
 const submitForm = async (formEl: FormInstance | undefined) => {
   if (!formEl) return
-  await formEl.validate((valid, fields) => {
+  await formEl.validate((valid, _fields) => {
     if (valid) {
       // 跳转聊天界面
       const data = {
@@ -76,23 +78,22 @@ const submitForm = async (formEl: FormInstance | undefined) => {
         'password': loginForm.password
       }
       loginApi(data).then(res => {
+        console.log("res",res);
         if (res.data.code == '500') {
-          ElMessage.warning(res.data.message);
-        } else if (res.data.code == '000') {
-          localStorage.setItem('access_token', res.data.accessToken as string);
+          ElMessage.warning(res.data.msg);
+        } else if (res.data.code == '200') {
+          localStorage.setItem('access_token', res.data.data.accessToken as string);
           router.push('/chat');
-          ElMessage.success('欢迎您' + res.data.username + '，登陆成功！');
+          ElMessage.success('欢迎您' + res.data.data.name + '，登陆成功！');
         }
       })
-    } else {
-      console.log('error submit!', fields)
     }
   })
 }
 
-const regist =async (formEl:FormInstance | undefined ) => {
+const registForm =async (formEl:FormInstance | undefined ) => {
   if (!formEl) return
-  await formEl.validate((valid, fields) => {
+  await formEl.validate((valid, _fields) => {
     if (valid) {
       // 跳转聊天界面
       const data = {
@@ -101,15 +102,13 @@ const regist =async (formEl:FormInstance | undefined ) => {
       }
       registApi(data).then(res => {
         if (res.data.code == '500') {
-          ElMessage.warning(res.data.message);
-        } else if (res.data.code == '000') {
-          localStorage.setItem('access_token', res.data.accessToken as string);
+          ElMessage.warning(res.data.msg);
+        } else if (res.data.code == '200') {
+          localStorage.setItem('access_token', res.data.data.accessToken as string);
           router.push('/chat');
-          ElMessage.success('欢迎您' + res.data.username + '，登陆成功！');
+          ElMessage.success('欢迎您' + res.data.data.name + '，登陆成功！');
         }
       })
-    } else {
-      console.log('error submit!', fields)
     }
   })
 }
@@ -117,7 +116,6 @@ const regist =async (formEl:FormInstance | undefined ) => {
  * 重置表单数据
  */
 const resetForm = (formEl: FormInstance | undefined) => {
-  console.log('resetForm---formEl', formEl);
   if (!formEl) return
   formEl.resetFields()
 }
@@ -125,9 +123,7 @@ const resetForm = (formEl: FormInstance | undefined) => {
  * 用户名输入框输入完跳转密码框
  */
 const handleUsernameEnter = () => {
-  // 当用户名输入框按下回车键时，将焦点切换到密码输入框
-  const passwordInput = document.querySelector('input[type=password]') as HTMLInputElement;
-  passwordInput.focus();
+  (document.querySelector('input[type=password]') as HTMLInputElement).focus();
 }
 /**
  * 关闭程序

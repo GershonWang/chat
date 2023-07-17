@@ -29,6 +29,7 @@ body {
   margin: 0 auto;
   text-align: center;
   position: absolute;
+  overflow: hidden;
 }
 
 /* 根据主题深浅模式，改变整体样式 */
