@@ -18,7 +18,7 @@
               <el-button type="primary" @click="submitForm(formRef)">登陆账户</el-button>
               <el-button type="info" @click="resetForm(formRef)">重新输入</el-button>
               <el-button type="success" @click="registForm(formRef)">注册账户</el-button>
-              <!-- <el-button type="danger" round><a @click="closeApp">关闭程序</a></el-button> -->
+          <!-- <el-button type="danger" round><a @click="closeApp">关闭程序</a></el-button> -->
           <!-- <el-button type="success" round><router-link to="/demo">测试跳转</router-link></el-button> -->
           <!-- <el-button type="success" round><router-link to="/update">测试update</router-link></el-button> -->
           </el-form>
@@ -78,11 +78,11 @@ const submitForm = async (formEl: FormInstance | undefined) => {
         'password': loginForm.password
       }
       loginApi(data).then(res => {
-        console.log("res",res);
         if (res.data.code == '500') {
           ElMessage.warning(res.data.msg);
         } else if (res.data.code == '200') {
-          localStorage.setItem('access_token', res.data.data.accessToken as string);
+          localStorage.setItem('username', res.data.data.username as string);
+          localStorage.setItem('apikey',res.data.data.apikey as string);
           router.push('/chat');
           ElMessage.success('欢迎您' + res.data.data.name + '，登陆成功！');
         }

@@ -59,11 +59,12 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { Ref, reactive, ref, nextTick } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { StarFilled } from '@element-plus/icons-vue'
 import { ipcRenderer } from 'electron'
 import { EventSourcePolyfill } from "event-source-polyfill";
 import { chatApi, closeChatApi } from '@/api/chat'
+import { setAPIKeyApi, getAPIKeyApi } from '@/api/config'
 import MarkdownRenderer from '@/renderer/MarkdownRenderer.vue';
 import BigImg from '@/renderer/ImageViewRenderer.vue'
 
@@ -104,13 +105,11 @@ let itemId = 1;
  * 自动滚动
  */
 const autoScroll = () => {
-  nextTick(() => {
     // 获取dom元素的高度并赋值给scrollTop,实现滚动条移动到最底部
     const contain = containMain.value as unknown as HTMLElement;
     if(contain != null) {
       contain.scrollTop = contain.scrollHeight;
     }
-  });
 }
 
 /**
@@ -120,6 +119,42 @@ const autoScroll = () => {
 const sleep = (time: number) => {
   return new Promise((resolve) => setTimeout(resolve, time))
 }
+
+/**
+ * 设置apiKey
+ */
+const setAPIKey = () => {
+  const apikey = localStorage.getItem('apikey');
+  const username = localStorage.getItem('username') as string;
+  if(apikey == null) {
+    ElMessageBox.prompt('请输入openai的apiKey', '提示', {
+      confirmButtonText: '确认',
+      cancelButtonText: '取消',
+      inputPattern:
+        /sk-[0-9a-zA-Z]{48}?/,
+      inputErrorMessage: 'apiKey格式错误',
+    })
+    .then(({ value }) => {
+      setAPIKeyApi({username:username,apikey:value}).then(_res => {
+        localStorage.setItem('apikey',value);
+        ElMessage({
+          type: 'success',
+          message: `您输入的apiKey是:${value}`,
+        })
+      }).catch(res => {
+        console.log("请求设置apikey报错,",res);
+      })
+    })
+    .catch(() => {
+      ElMessage({
+        type: 'info',
+        message: '请输入apiKey才能继续使用',
+      })
+    })
+  }
+}
+
+setAPIKey();
 
 /**
  * 获取随机数
@@ -138,6 +173,10 @@ const uuid = () => {
 
 localStorage.setItem('uid', uuid());
 
+/**
+ * 是否大图显示图片
+ * @param imageUrl 图片地址
+ */
 const isShowImage = (imageUrl: string) => {
   showImg.value = true;
   bigImgSrc.value = imageUrl;
@@ -176,7 +215,10 @@ const sendQue = async () => {
   state.items.push(newItem)
   state.items = [...state.items] // 强制更新
 
-  autoScroll() // 自动滚动
+  nextTick(() => {
+    autoScroll() // 自动滚动
+  });
+
   itemId++; // itemId加1
 
   // 右侧菜单追加问题内容
@@ -204,6 +246,9 @@ const sendQue = async () => {
     ////////////////////////////////// 发送提问chat请求 /////////////////////////////////
     if (uid == null) {
       ElMessage.success("获取缓存中的uuid失败！");
+      nextTick(() => {
+        autoScroll() // 自动滚动
+      });
       isDisabled.value = false; // 重新启用(输入框/发送按钮)
       isStopDisabled.value = true; // 禁用停止按钮
       (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
@@ -213,13 +258,14 @@ const sendQue = async () => {
       console.log('chatApi响应结果', res);
     }).catch(async res => {
       console.log('接口报错打印', res)
-      // closeChatApi(<string>uid);
       newItem.showChild = true;
       const errorMsg = '网络请求异常，请再次尝试!';
       for (let i = 0; i < errorMsg.length; i++) {
         newItem.warnText += errorMsg[i];
         state.items = [...state.items] // 强制更新
-        autoScroll() // 自动滚动
+        nextTick(() => {
+          autoScroll() // 自动滚动
+        });
         await sleep(100);
       }
       event.target.close(); // 关闭sse连接
@@ -236,14 +282,18 @@ const sendQue = async () => {
       newItem.imageUrl = new URL(event.data, import.meta.url).href;
       newItem.showImage = true;
       state.items = [...state.items] // 强制更新
-      autoScroll() // 自动滚动
+      nextTick(() => {
+        autoScroll() // 自动滚动
+      });
       return;
     }
     // 获取token
     if (event.lastEventId == "[TOKENS]") {
       newItem.childText += event.data;
       state.items = [...state.items] // 强制更新
-      autoScroll() // 自动滚动
+      nextTick(() => {
+        autoScroll() // 自动滚动
+      });
       return;
     }
     // 判断结尾
@@ -255,7 +305,9 @@ const sendQue = async () => {
       console.log('newItem.childText',newItem.childText);
       event.target.close(); // 关闭sse连接
       state.items = [...state.items] // 强制更新
-      autoScroll() // 自动滚动
+      nextTick(() => {
+        autoScroll() // 自动滚动
+      });
       isDisabled.value = false; // 重新启用(输入框/发送按钮)
       isStopDisabled.value = true; // 禁用停止按钮
       (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
@@ -268,7 +320,9 @@ const sendQue = async () => {
     newItem.showMarkdown = true;
     newItem.childText += json_data.content;
     state.items = [...state.items] // 强制更新
-    autoScroll() // 自动滚动
+    nextTick(() => {
+      autoScroll() // 自动滚动
+    });
   };
   // 报错时触发函数
   eventSource.onerror = async (event) => {
@@ -278,7 +332,9 @@ const sendQue = async () => {
     for (let i = 0; i < errorMsg.length; i++) {
       newItem.warnText += errorMsg[i];
       state.items = [...state.items] // 强制更新
-      autoScroll() // 自动滚动
+      nextTick(() => {
+        autoScroll() // 自动滚动
+      });
       await sleep(100);
     }
     event.target.close();
