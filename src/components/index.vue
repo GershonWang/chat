@@ -62,7 +62,7 @@ const rules = reactive<FormRules>({
   ],
   password: [
     { required: true, message: '密码不能为空', trigger: 'change' },
-    { pattern: /^[A-Za-z0-9_]+$/, message: '组件英文名称只能由 大小写字母、数字、下划线组成', trigger: 'blur' }
+    { pattern: /^[A-Za-z0-9_@]+$/, message: '密码只能由大小写字母、数字、下划线组成', trigger: 'blur' }
   ],
 })
 /**
@@ -81,8 +81,14 @@ const submitForm = async (formEl: FormInstance | undefined) => {
         if (res.data.code == '500') {
           ElMessage.warning(res.data.msg);
         } else if (res.data.code == '200') {
-          localStorage.setItem('username', res.data.data.username as string);
-          localStorage.setItem('apikey',res.data.data.apikey as string);
+          localStorage.removeItem('username');
+          localStorage.removeItem('apikey');
+          if (res.data.data.username) {
+            localStorage.setItem('username', res.data.data.username);
+          }
+          if (res.data.data.apikey) {
+            localStorage.setItem('apikey',res.data.data.apikey);
+          }
           router.push('/chat');
           ElMessage.success('欢迎您' + res.data.data.name + '，登陆成功！');
         }
@@ -90,7 +96,9 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     }
   })
 }
-
+/**
+ * 提交表单数据(注册账户)
+ */
 const registForm =async (formEl:FormInstance | undefined ) => {
   if (!formEl) return
   await formEl.validate((valid, _fields) => {
@@ -104,7 +112,11 @@ const registForm =async (formEl:FormInstance | undefined ) => {
         if (res.data.code == '500') {
           ElMessage.warning(res.data.msg);
         } else if (res.data.code == '200') {
-          localStorage.setItem('access_token', res.data.data.accessToken as string);
+          localStorage.removeItem('username');
+          localStorage.removeItem('apikey');
+          if (res.data.data.username) {
+            localStorage.setItem('username', res.data.data.username);
+          }
           router.push('/chat');
           ElMessage.success('欢迎您' + res.data.data.name + '，登陆成功！');
         }

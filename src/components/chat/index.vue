@@ -186,6 +186,12 @@ const isShowImage = (imageUrl: string) => {
  * 请求查询接口
  */
 const sendQue = async () => {
+  // 校验apiKey是否存在，当不存在时重新输入，否则无法使用
+  setAPIKey();
+  const key = localStorage.getItem('apikey');
+  if (key == null) {
+    return;
+  }
   /* 1.获取缓存中的uuid,并判断是否为空 */
   let uid: string | null = localStorage.getItem('uid');
   if (uid == null) {
