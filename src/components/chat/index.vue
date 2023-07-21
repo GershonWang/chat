@@ -391,6 +391,7 @@ const closeApp = () => {
   font-size: 24px;
   font-weight: bold;
   line-height: var(--el-header-height);
+  display: none;  /* 不显示标题栏 */
 }
 
 .container-menu {
