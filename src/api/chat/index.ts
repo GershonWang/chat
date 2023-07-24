@@ -8,14 +8,15 @@ import { ChatData, ChatResult } from './types';
  * @param data {ChatData}
  * @returns
  */
-export function chatApi(data: ChatData, uid: string): AxiosPromise<ChatResult> {
+export function chatApi(data: ChatData, uid: string, token: string): AxiosPromise<ChatResult> {
     return request({
         url: '/chat',
         method: 'post',
         // params: data
         data: JSON.stringify(data),
         headers: {
-            'uid': uid
+            'uid': uid,
+            'token': token
         }
     });
 }

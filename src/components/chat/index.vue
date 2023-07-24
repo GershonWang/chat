@@ -182,10 +182,18 @@ const isShowImage = (imageUrl: string) => {
   bigImgSrc.value = imageUrl;
 }
 
+// 获取登陆token
+const token = localStorage.getItem('token');
 /**
  * 请求查询接口
  */
 const sendQue = async () => {
+  // 校验token
+  if(token == null) {
+    router.back();
+    ElMessage.error("token丢失，返回登陆界面！");
+    return;
+  }
   // 校验apiKey是否存在，当不存在时重新输入，否则无法使用
   setAPIKey();
   const key = localStorage.getItem('apikey');
@@ -242,7 +250,7 @@ const sendQue = async () => {
 
   /* 3.建立SSE网络连接,并将缓存中的uid传入请求头 */
   const eventSource = new EventSourcePolyfill(import.meta.env.VITE_BASE_URL + '/createSse', {
-    headers: { 'uid': uid },
+    headers: { 'uid': uid , 'token': token},
     heartbeatTimeout: 60000
   });
   /* 3.1 打开连接 */
@@ -260,7 +268,7 @@ const sendQue = async () => {
       (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
       return;
     }
-    chatApi({ msg: inputMsg }, uid).then(async res => {
+    chatApi({ msg: inputMsg }, uid, token).then(async res => {
       console.log('chatApi响应结果', res);
     }).catch(async res => {
       console.log('接口报错打印', res)

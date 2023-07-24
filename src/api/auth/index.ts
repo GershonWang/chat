@@ -23,7 +23,7 @@ export function loginApi(data: LoginData): AxiosPromise<LoginResult> {
  */
 export function registApi(data: LoginData): AxiosPromise<LoginResult> {
   return request({
-    url: '/auth/addUser',
+    url: '/user/addUser',
     method: 'post',
     params: data,
   });

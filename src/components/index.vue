@@ -89,6 +89,9 @@ const submitForm = async (formEl: FormInstance | undefined) => {
           if (res.data.data.apikey) {
             localStorage.setItem('apikey',res.data.data.apikey);
           }
+          if (res.data.data.accessToken) {
+            localStorage.setItem('token',res.data.data.accessToken);
+          }
           router.push('/chat');
           ElMessage.success('欢迎您' + res.data.data.name + '，登陆成功！');
         }
@@ -99,7 +102,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 /**
  * 提交表单数据(注册账户)
  */
-const registForm =async (formEl:FormInstance | undefined ) => {
+const registForm = async (formEl:FormInstance | undefined ) => {
   if (!formEl) return
   await formEl.validate((valid, _fields) => {
     if (valid) {
@@ -112,13 +115,7 @@ const registForm =async (formEl:FormInstance | undefined ) => {
         if (res.data.code == '500') {
           ElMessage.warning(res.data.msg);
         } else if (res.data.code == '200') {
-          localStorage.removeItem('username');
-          localStorage.removeItem('apikey');
-          if (res.data.data.username) {
-            localStorage.setItem('username', res.data.data.username);
-          }
-          router.push('/chat');
-          ElMessage.success('欢迎您' + res.data.data.name + '，登陆成功！');
+          ElMessage.success(res.data.data);
         }
       })
     }
