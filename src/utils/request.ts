@@ -1,5 +1,15 @@
 import axios, { InternalAxiosRequestConfig, AxiosResponse } from 'axios';
-import { ElMessage } from 'element-plus'
+import { ElMessage } from 'element-plus';
+
+// 处理 类型“AxiosResponse<LoginResult, any>”上不存在属性“code”。
+declare module 'axios' {
+  interface AxiosResponse<T = any> {
+    // 这里追加你的参数
+    code: null;
+    msg: '';
+  }
+  export function create(config?: AxiosRequestConfig): AxiosInstance;
+}
 
 // 创建 axios 实例
 const service = axios.create({
@@ -12,7 +22,11 @@ const service = axios.create({
 
 // 请求拦截器
 service.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  console.log('请求拦截器中', config);
+  // 将token放入请求头
+  if (localStorage.getItem('token')) {
+    const token = localStorage.getItem('token')
+    config.headers.set('token', token);
+  }
   return config;
 }, (error: any) => {
   return Promise.reject(error);
@@ -20,24 +34,21 @@ service.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
 // 响应拦截器
 service.interceptors.response.use((response: AxiosResponse) => {
-  console.log('响应拦截器中', response);
   const status = response.status;
   if (status == 200) {
     // 响应数据为二进制流处理(Excel导出)
     if (response.data instanceof ArrayBuffer) {
-      return response;
+      return response.data;
     }
-    return response;
+    return response.data;
   } else {
-    const { msg } = response.data;
-    ElMessage.error(msg || '系统出错');
-    return Promise.reject(new Error(msg || 'Error'));
+    ElMessage.error('系统出错');
+    return Promise.reject(new Error('Error'));
   }
 }, (error: any) => {
-  console.log('error.code',);
-  if(error.code =='ERR_NETWORK'){
+  if (error.code == 'ERR_NETWORK') {
     ElMessage.error('网络异常！');
-  } else{
+  } else {
     ElMessage.error('服务异常请重试并联系开发者！！');
   }
   return Promise.reject(error.message);

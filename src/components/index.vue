@@ -41,7 +41,7 @@ import { useRouter } from 'vue-router'
 import { reactive, ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ipcRenderer } from 'electron'
-import { loginApi, registApi } from '../api/auth'
+import { loginApi, registApi } from '@/api/auth'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter();
@@ -78,22 +78,22 @@ const submitForm = async (formEl: FormInstance | undefined) => {
         'password': loginForm.password
       }
       loginApi(data).then(res => {
-        if (res.data.code == '500') {
-          ElMessage.warning(res.data.msg);
-        } else if (res.data.code == '200') {
+        if (res.code == '500') {
+          ElMessage.warning(res.msg);
+        } else if (res.code == '200') {
           localStorage.removeItem('username');
           localStorage.removeItem('apikey');
-          if (res.data.data.username) {
-            localStorage.setItem('username', res.data.data.username);
+          if (res.data.username) {
+            localStorage.setItem('username', res.data.username);
           }
-          if (res.data.data.apikey) {
-            localStorage.setItem('apikey',res.data.data.apikey);
+          if (res.data.apikey) {
+            localStorage.setItem('apikey',res.data.apikey);
           }
-          if (res.data.data.accessToken) {
-            localStorage.setItem('token',res.data.data.accessToken);
+          if (res.data.accessToken) {
+            localStorage.setItem('token',res.data.accessToken);
           }
           router.push('/chat');
-          ElMessage.success('欢迎您' + res.data.data.name + '，登陆成功！');
+          ElMessage.success('欢迎您' + res.data.name + '，登陆成功！');
         }
       })
     }
@@ -112,10 +112,10 @@ const registForm = async (formEl:FormInstance | undefined ) => {
         'password': loginForm.password
       }
       registApi(data).then(res => {
-        if (res.data.code == '500') {
-          ElMessage.warning(res.data.msg);
-        } else if (res.data.code == '200') {
-          ElMessage.success(res.data.data);
+        if (res.code == '500') {
+          ElMessage.warning(res.msg);
+        } else if (res.code == '200') {
+          ElMessage.success(res.data);
         }
       })
     }

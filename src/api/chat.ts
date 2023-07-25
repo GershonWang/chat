@@ -1,6 +1,5 @@
-import request from '../../utils/request';
+import request from '../utils/request';
 import { AxiosPromise } from 'axios';
-import { ChatData, ChatResult } from './types';
 
 /**
  * chat请求
@@ -8,15 +7,13 @@ import { ChatData, ChatResult } from './types';
  * @param data {ChatData}
  * @returns
  */
-export function chatApi(data: ChatData, uid: string, token: string): AxiosPromise<ChatResult> {
+export function chatApi(data: ChatData, uid: string): AxiosPromise<any> {
     return request({
         url: '/chat',
         method: 'post',
-        // params: data
         data: JSON.stringify(data),
         headers: {
-            'uid': uid,
-            'token': token
+            'uid': uid
         }
     });
 }
@@ -35,4 +32,15 @@ export function closeChatApi(uid: string) {
             'uid': uid
         }
     });
+}
+
+/**
+ * 聊天请求参数
+ */
+export interface ChatData {
+    /**
+     * 发送的问题消息
+     */
+    msg?: string;
+
 }

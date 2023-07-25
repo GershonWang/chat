@@ -64,7 +64,7 @@ import { StarFilled } from '@element-plus/icons-vue'
 import { ipcRenderer } from 'electron'
 import { EventSourcePolyfill } from "event-source-polyfill";
 import { chatApi, closeChatApi } from '@/api/chat'
-import { setAPIKeyApi, getAPIKeyApi } from '@/api/config'
+import { setAPIKeyApi } from '@/api/config'
 import MarkdownRenderer from '@/renderer/MarkdownRenderer.vue';
 import BigImg from '@/renderer/ImageViewRenderer.vue'
 
@@ -130,11 +130,9 @@ const setAPIKey = () => {
     ElMessageBox.prompt('请输入openai的apiKey', '提示', {
       confirmButtonText: '确认',
       cancelButtonText: '取消',
-      inputPattern:
-        /sk-[0-9a-zA-Z]{48}?/,
+      inputPattern: /sk-[0-9a-zA-Z]{48}?/,
       inputErrorMessage: 'apiKey格式错误',
-    })
-    .then(({ value }) => {
+    }).then(({ value }) => {
       setAPIKeyApi({username:username,apikey:value}).then(_res => {
         localStorage.setItem('apikey',value);
         ElMessage({
@@ -144,8 +142,7 @@ const setAPIKey = () => {
       }).catch(res => {
         console.log("请求设置apikey报错,",res);
       })
-    })
-    .catch(() => {
+    }).catch(() => {
       ElMessage({
         type: 'info',
         message: '请输入apiKey才能继续使用',
@@ -250,12 +247,11 @@ const sendQue = async () => {
 
   /* 3.建立SSE网络连接,并将缓存中的uid传入请求头 */
   const eventSource = new EventSourcePolyfill(import.meta.env.VITE_BASE_URL + '/createSse', {
-    headers: { 'uid': uid , 'token': token},
+    headers: { 'uid': uid },
     heartbeatTimeout: 60000
   });
   /* 3.1 打开连接 */
   eventSource.onopen = (event) => {
-    console.log("开始输出后端返回值", event);
     isStopDisabled.value = false // 启用停止按钮
     ////////////////////////////////// 发送提问chat请求 /////////////////////////////////
     if (uid == null) {
@@ -268,8 +264,8 @@ const sendQue = async () => {
       (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
       return;
     }
-    chatApi({ msg: inputMsg }, uid, token).then(async res => {
-      console.log('chatApi响应结果', res);
+    chatApi({ msg: inputMsg }, uid).then(async res => {
+      // console.log('chatApi响应结果', res);
     }).catch(async res => {
       console.log('接口报错打印', res)
       newItem.showChild = true;
@@ -290,7 +286,7 @@ const sendQue = async () => {
     ////////////////////////////////// 发送提问chat请求 /////////////////////////////////
   };
   /* 3.2 发送消息 */
-  eventSource.onmessage = (event) => {
+  eventSource.onmessage = async (event) => {
     // console.log('onmessage', event);
     if (event.lastEventId == "[IMG]") {
       newItem.imageUrl = new URL(event.data, import.meta.url).href;
@@ -315,8 +311,7 @@ const sendQue = async () => {
       newItem.childText += event.data;
       const endText = newItem.childText;
       const lastIndex = endText.lastIndexOf(event.data);
-      newItem.childText = "\n" + endText.substring(0,lastIndex) + "（BPE）";
-      console.log('newItem.childText',newItem.childText);
+      newItem.warnText = endText.substring(0,lastIndex) + "（BPE）";
       event.target.close(); // 关闭sse连接
       state.items = [...state.items] // 强制更新
       nextTick(() => {
