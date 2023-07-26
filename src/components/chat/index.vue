@@ -5,26 +5,21 @@
       <!-- <el-aside class="container-menu"></el-aside> -->
       <el-container>
         <el-main class="container-main">
-          <div class="containMain" ref="containMain">
+          <div class="containMain" ref="containMainRef">
             <div class="backdrop" v-for="item in state.items" :key="item.id">
               <div class="titleDiv" @mouseover="item.showTip = true;" @mouseout="item.showTip = false;">
-                <a class="title">{{ item.text }}</a>
+                <a class="title">{{ item.title }}</a>
               </div>
-              <div class="tooltip" v-if="item.showTip">{{ item.text }}</div>
+              <div class="tooltip" v-if="item.showTip">{{ item.title }}</div>
               <!-- <hr> 添加一条分界线 -->
               <el-divider>
                 <el-icon><star-filled /></el-icon>
               </el-divider>
-              <div ref="child">
-                <div v-if="item.showImage" style="margin-top: 25px;">
-                  <img :src="item.imageUrl" @click="isShowImage(item.imageUrl)" style="width: 300px;">
-                </div>
-                <div v-if="item.showMarkdown">
-                  <MarkdownRenderer :markdown="item.childText" :num="item.id"></MarkdownRenderer>
-                </div>
-                <div v-if="item.showChild" style="margin-top: 25px;">
-                  <a style="color:red;">{{ item.warnText }}</a>
-                </div>
+              <div v-if="item.showImage" style="margin-top: 25px;">
+                <img :src="item.imageUrl" @click="isShowImage(item.imageUrl)" style="width: 300px;">
+              </div>
+              <div v-if="item.showMarkdown">
+                <MarkdownRenderer :markdown="item.markdownText" :num="item.id"></MarkdownRenderer>
               </div>
             </div>
             <big-img v-if="showImg" @click="showImg = false" :imgSrc="bigImgSrc"></big-img>
@@ -34,12 +29,11 @@
           <el-input ref="textareaRef" v-model="textarea" :rows="2" type="textarea" placeholder="请输入您要咨询的问题..."
             @keydown.ctrl.enter="sendQue()" :disabled="isDisabled" :resize="'none'"
             input-style="width:600px;background-color:#2D333B;color:white;margin-right: 30px;" />
-          <el-button type="success" @click="sendQue()" :disabled="isDisabled"
+          <el-button type="success" @click="sendQue" :disabled="isDisabled"
             style="color: white;font-weight: bold;background-color: blueviolet;">发送(Ctrl+Enter)</el-button>
           <el-button type="danger" @click="stopSend" :disabled="isStopDisabled" style="color: white;font-weight: bold;">停止发送</el-button>
           <el-button @click="reset()" style="color: black;font-weight: bold;">清空</el-button>
           <el-button @click="router.back()">返回登陆</el-button>
-          <!-- <el-button type="danger" round><a @click="closeApp">关闭程序</a></el-button> -->
         </el-footer>
       </el-container>
       <el-aside class="container-menu">
@@ -61,7 +55,6 @@ import { useRouter } from 'vue-router'
 import { Ref, reactive, ref, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { StarFilled } from '@element-plus/icons-vue'
-import { ipcRenderer } from 'electron'
 import { EventSourcePolyfill } from "event-source-polyfill";
 import { chatApi, closeChatApi } from '@/api/chat'
 import { setAPIKeyApi } from '@/api/config'
@@ -69,94 +62,88 @@ import MarkdownRenderer from '@/renderer/MarkdownRenderer.vue';
 import BigImg from '@/renderer/ImageViewRenderer.vue'
 
 const router = useRouter();
+const textarea: Ref<string> = ref('')
+const isDisabled: Ref<boolean> = ref(false)
+const isStopDisabled: Ref<boolean> = ref(true)
+const containMainRef = ref<InstanceType<typeof HTMLElement>>()
+const textareaRef = ref<InstanceType<typeof HTMLElement>>()
+const showImg: Ref<boolean> = ref(false)
+const bigImgSrc: Ref<string> = ref('')
 
 interface Item {
   id: number;
-  text: string;
+  title: string;
   showTip: boolean;
-  showChild: boolean;
-  warnText: string;
   showImage: boolean;
   imageUrl: string;
   showMarkdown: boolean;
-  childText: string;
+  markdownText: string;
 }
 
 interface State {
   items: Item[];
 }
 
-const textarea: Ref<string> = ref('')
-const isDisabled: Ref<boolean> = ref(false)
-const isStopDisabled: Ref<boolean> = ref(true)
-const containMain = ref<InstanceType<typeof HTMLElement>>()
-const textareaRef: Ref<HTMLElement | null> = ref(null)
-const child: Ref<HTMLElement | null> = ref(null)
-const showImg: Ref<boolean> = ref(false)
-const bigImgSrc: Ref<string> = ref('')
-
 const state: State = reactive<State>({
   items: []
 });
 
+// 获取登陆token
+let localToken = localStorage.getItem('token');
+// 获取apikey
+let localApikey = localStorage.getItem('apikey');
+// 获取username
+let localUsername = localStorage.getItem('username');
+// 获取uid
+let localUid = localStorage.getItem('uid');
+// 初始化卡片序号
 let itemId = 1;
 
 /**
  * 自动滚动
  */
-const autoScroll = () => {
-    // 获取dom元素的高度并赋值给scrollTop,实现滚动条移动到最底部
-    const contain = containMain.value as unknown as HTMLElement;
-    if(contain != null) {
-      contain.scrollTop = contain.scrollHeight;
-    }
-}
-
-/**
- * 沉睡time时长
- * @param time 时长
- */
-const sleep = (time: number) => {
-  return new Promise((resolve) => setTimeout(resolve, time))
+function autoScroll() {
+  // 获取dom元素的高度并赋值给scrollTop,实现滚动条移动到最底部
+  const contain = containMainRef.value as unknown as HTMLElement;
+  if(contain != null) {
+    contain.scrollTop = contain.scrollHeight;
+  }
 }
 
 /**
  * 设置apiKey
  */
-const setAPIKey = () => {
-  const apikey = localStorage.getItem('apikey');
-  const username = localStorage.getItem('username') as string;
-  if(apikey == null) {
-    ElMessageBox.prompt('请输入openai的apiKey', '提示', {
-      confirmButtonText: '确认',
-      cancelButtonText: '取消',
-      inputPattern: /sk-[0-9a-zA-Z]{48}?/,
-      inputErrorMessage: 'apiKey格式错误',
-    }).then(({ value }) => {
-      setAPIKeyApi({username:username,apikey:value}).then(_res => {
-        localStorage.setItem('apikey',value);
-        ElMessage({
-          type: 'success',
-          message: `您输入的apiKey是:${value}`,
-        })
-      }).catch(res => {
-        console.log("请求设置apikey报错,",res);
-      })
-    }).catch(() => {
+function setAPIKey() {
+  if(localApikey != null) return;
+  ElMessageBox.prompt('请输入openai的apiKey', '提示', {
+    confirmButtonText: '确认',
+    cancelButtonText: '取消',
+    inputPattern: /sk-[0-9a-zA-Z]{48}?/,
+    inputErrorMessage: 'apiKey格式错误',
+  }).then(({ value }) => {
+    if(localUsername == null) return;
+    setAPIKeyApi({ username: localUsername, apikey: value }).then(_res => {
+      localStorage.setItem('apikey',value);
+      localApikey = value;
       ElMessage({
-        type: 'info',
-        message: '请输入apiKey才能继续使用',
+        type: 'success',
+        message: `您输入的apiKey是:${value}`,
       })
+    }).catch(res => {
+      console.log("请求设置apikey报错",res);
     })
-  }
+  }).catch(() => {
+    ElMessage({
+      type: 'info',
+      message: '请输入apiKey才能继续使用',
+    })
+  })
 }
-
-setAPIKey();
 
 /**
  * 获取随机数
  */
-const uuid = () => {
+function uuid() {
   var s = [];
   var hexDigits = "0123456789abcdef";
   for (var i = 0; i < 36; i++) {
@@ -168,184 +155,171 @@ const uuid = () => {
   return uuid;
 }
 
+/**
+ * 初始化加载
+ */
+setAPIKey();
+/**
+ * 初始化设置uid
+ */
 localStorage.setItem('uid', uuid());
+localUid = localStorage.getItem('uid');
 
 /**
  * 是否大图显示图片
  * @param imageUrl 图片地址
  */
-const isShowImage = (imageUrl: string) => {
+function isShowImage(imageUrl: string) {
   showImg.value = true;
   bigImgSrc.value = imageUrl;
 }
 
-// 获取登陆token
-const token = localStorage.getItem('token');
 /**
  * 请求查询接口
  */
-const sendQue = async () => {
-  // 校验token
-  if(token == null) {
+ async function sendQue() {
+  /* 1.校验token */
+  if(localToken == null) {
     router.back();
     ElMessage.error("token丢失，返回登陆界面！");
     return;
   }
-  // 校验apiKey是否存在，当不存在时重新输入，否则无法使用
+  /* 2.校验apiKey是否存在，当不存在时重新输入，否则无法使用 */
   setAPIKey();
-  const key = localStorage.getItem('apikey');
-  if (key == null) {
+  /* 3.校验localApikey为空就返回 */
+  if (localApikey == null) {
+    ElMessage.warning("获取缓存中的apikey失败！")
     return;
   }
-  /* 1.获取缓存中的uuid,并判断是否为空 */
-  let uid: string | null = localStorage.getItem('uid');
-  if (uid == null) {
-    ElMessage.success("获取缓存中的uuid失败！");
+  /* 4.获取缓存中的uuid,并判断是否为空 */
+  if (localUid == null) {
+    ElMessage.warning("获取缓存中的uuid失败！");
     return;
   }
-  console.log("请求chat时获取到的uid", uid);
-  /* 2.获取输入框内容,并判断是否为空 */
+  console.log("请求chat时获取到的uid", localUid);
+  /* 5.获取输入框内容,并判断是否为空 */
   let inputMsg = textarea.value;
   if (inputMsg === null || inputMsg === '') {
-    ElMessage.success("发送内容不能为空！");
+    ElMessage.warning("发送内容不能为空！");
     return;
   }
-  textarea.value = '' // 将输入框的内容置空
-  isDisabled.value = true; // 禁用(输入框/发送按钮)
+  /* 6.初始化一些属性参数 */
+  // 6.1 将输入框的内容置空
+  textarea.value = '';
+  // 6.2 禁用(输入框/发送按钮)
+  isDisabled.value = true; 
+  // 6.3 创建卡片默认属性对象
   const newItem: Item = {
     id: itemId,
-    text: inputMsg,
+    title: inputMsg,
     showTip: false,
-    showChild: false,
-    warnText: '',
     showImage: false,
     imageUrl: '',
     showMarkdown: false,
-    childText: ''
+    markdownText: ''
   };
+  // 6.4 将对象导入数组中
   state.items.push(newItem)
-  state.items = [...state.items] // 强制更新
-
+  // 6.5 强制更新
+  state.items = [...state.items] 
+  // 6.6 自动滚动
   nextTick(() => {
-    autoScroll() // 自动滚动
+    autoScroll() 
   });
-
-  itemId++; // itemId加1
-
-  // 右侧菜单追加问题内容
+  // 6.7 itemId加1
+  itemId++; 
+  // 6.8 右侧菜单追加问题内容
   var list = document.querySelector(".quest_list");
   let li = document.createElement("li")
   li.setAttribute("style","margin-buttom:12px");
   let liDom = li.cloneNode(false);
   let a = document.createElement("a");
-  a.setAttribute("onClick","setMsg()");
+  a.setAttribute("href","javascript:void(0)");
+  a.setAttribute("onClick","alert('textarea.value = msg;')");
   let aDom = a.cloneNode(false);
   let lang = document.createTextNode(inputMsg);
   (aDom as unknown as HTMLElement).appendChild(lang);
   (liDom as unknown as HTMLElement).appendChild(aDom);
   (list as unknown as HTMLElement).appendChild(liDom);
-
-  /* 3.建立SSE网络连接,并将缓存中的uid传入请求头 */
+  /* 7.建立SSE网络连接,并将缓存中的uid传入请求头 */
   const eventSource = new EventSourcePolyfill(import.meta.env.VITE_BASE_URL + '/createSse', {
-    headers: { 'uid': uid },
+    headers: { 'uid': localUid },
     heartbeatTimeout: 60000
   });
-  /* 3.1 打开连接 */
+  /* 8. 打开连接 */
   eventSource.onopen = (event) => {
-    isStopDisabled.value = false // 启用停止按钮
-    ////////////////////////////////// 发送提问chat请求 /////////////////////////////////
-    if (uid == null) {
-      ElMessage.success("获取缓存中的uuid失败！");
-      nextTick(() => {
-        autoScroll() // 自动滚动
-      });
-      isDisabled.value = false; // 重新启用(输入框/发送按钮)
-      isStopDisabled.value = true; // 禁用停止按钮
-      (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
-      return;
-    }
-    chatApi({ msg: inputMsg }, uid).then(async res => {
-      // console.log('chatApi响应结果', res);
-    }).catch(async res => {
+    // 启用停止按钮
+    isStopDisabled.value = false 
+    // 发送提问chat请求
+    chatApi({ msg: inputMsg }, localUid).catch(res => {
       console.log('接口报错打印', res)
-      newItem.showChild = true;
-      const errorMsg = '网络请求异常，请再次尝试!';
-      for (let i = 0; i < errorMsg.length; i++) {
-        newItem.warnText += errorMsg[i];
-        state.items = [...state.items] // 强制更新
-        nextTick(() => {
-          autoScroll() // 自动滚动
-        });
-        await sleep(100);
-      }
+      ElMessage.error('网络请求异常，请再次尝试!');
       event.target.close(); // 关闭sse连接
       isDisabled.value = false; // 重新启用(输入框/发送按钮)
       isStopDisabled.value = true; // 禁用停止按钮
       (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
     })
-    ////////////////////////////////// 发送提问chat请求 /////////////////////////////////
-  };
-  /* 3.2 发送消息 */
+  }
+  /* 9. 发送消息 */
   eventSource.onmessage = async (event) => {
     // console.log('onmessage', event);
     if (event.lastEventId == "[IMG]") {
       newItem.imageUrl = new URL(event.data, import.meta.url).href;
       newItem.showImage = true;
-      state.items = [...state.items] // 强制更新
+      // 强制更新
+      state.items = [...state.items] 
+      // 自动滚动
       nextTick(() => {
-        autoScroll() // 自动滚动
+        autoScroll() 
       });
       return;
     }
     // 获取token
     if (event.lastEventId == "[TOKENS]") {
-      newItem.childText += event.data;
-      state.items = [...state.items] // 强制更新
+      newItem.markdownText += event.data;
+      // 强制更新
+      state.items = [...state.items]
+      // 自动滚动
       nextTick(() => {
-        autoScroll() // 自动滚动
+        autoScroll() 
       });
       return;
     }
     // 判断结尾
     if (event.lastEventId == "[DONE]") {
-      newItem.childText += event.data;
-      const endText = newItem.childText;
-      const lastIndex = endText.lastIndexOf(event.data);
-      newItem.warnText = endText.substring(0,lastIndex) + "（BPE）";
-      event.target.close(); // 关闭sse连接
-      state.items = [...state.items] // 强制更新
+      newItem.markdownText += event.data;
+      const lastIndex = newItem.markdownText.lastIndexOf(event.data);
+      newItem.markdownText = newItem.markdownText.substring(0,lastIndex) + "（BPE）";
+      // 关闭sse连接
+      event.target.close()
+      // 强制更新
+      state.items = [...state.items]
+      // 自动滚动
       nextTick(() => {
-        autoScroll() // 自动滚动
-      });
+        autoScroll() 
+      })
       isDisabled.value = false; // 重新启用(输入框/发送按钮)
       isStopDisabled.value = true; // 禁用停止按钮
       (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
-      return;
+      return
     }
     let json_data = JSON.parse(event.data)
     if (json_data.content == null || json_data.content == "null") {
-      return;
+      return
     }
     newItem.showMarkdown = true;
-    newItem.childText += json_data.content;
-    state.items = [...state.items] // 强制更新
+    newItem.markdownText += json_data.content;
+    // 强制更新
+    state.items = [...state.items]
+    // 自动滚动
     nextTick(() => {
-      autoScroll() // 自动滚动
-    });
+      autoScroll()
+    })
   };
-  // 报错时触发函数
+  // 10. 报错时触发函数
   eventSource.onerror = async (event) => {
     console.log("onerror", event);
-    newItem.showChild = true;
-    const errorMsg = '网络异常，创建连接失败，请再次尝试!';
-    for (let i = 0; i < errorMsg.length; i++) {
-      newItem.warnText += errorMsg[i];
-      state.items = [...state.items] // 强制更新
-      nextTick(() => {
-        autoScroll() // 自动滚动
-      });
-      await sleep(100);
-    }
+    ElMessage.error('网络异常，请稍后再次尝试!');
     event.target.close();
     isDisabled.value = false; // 重新启用(输入框/发送按钮)
     isStopDisabled.value = true; // 禁用停止按钮
@@ -356,30 +330,24 @@ const sendQue = async () => {
 /**
  * 关闭正在进行中的会话
  */
-const stopSend = () => {
+function stopSend() {
   /* 1.获取缓存中的uuid,并判断是否为空 */
-  let uid: string | null = localStorage.getItem('uid');
-  if (uid == null) {
+  if (localUid == null) {
     ElMessage.success("获取缓存中的uuid失败！");
     return;
   }
-  console.log("请求关闭会话时获取到的uid", uid);
-  closeChatApi(uid);
+  console.log("请求关闭会话时获取到的uid", localUid);
+  closeChatApi(localUid);
 }
 
 /**
  * 重置uuid以及数据
  */
-const reset = () => {
+ function reset() {
   localStorage.setItem('uid', uuid());
+  localUid = localStorage.getItem('uid');
   state.items = [];
-}
-
-/**
- * 关闭程序
- */
-const closeApp = () => {
-  ipcRenderer.send('close-app');
+  itemId = 1;
 }
 </script>
 

@@ -7,7 +7,7 @@ import { AxiosPromise } from 'axios';
  * @param data {ChatData}
  * @returns
  */
-export function chatApi(data: ChatData, uid: string): AxiosPromise<any> {
+export function chatApi(data: ChatData, uid: string | null): AxiosPromise<any> {
     return request({
         url: '/chat',
         method: 'post',

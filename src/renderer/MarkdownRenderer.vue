@@ -87,6 +87,7 @@ export default defineComponent({
         // 生成代码块的一键复制按钮和行号
         if (this.markdown.endsWith('（BPE）')) {
           const elem = (document.querySelectorAll(".containMain")[0].children)[this.num - 1];
+          console.log('elem',elem);
           const codeDoms = elem.querySelectorAll('pre');
           Array.from(codeDoms).forEach((item, index) => {
             if (item.children && item.children.length > 0) {
