@@ -5,7 +5,6 @@
   
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { shell } from 'electron';
 import MarkdownIt from 'markdown-it';
 import Clipboard from 'clipboard'
 import { ElMessage } from 'element-plus'
@@ -35,17 +34,6 @@ export default defineComponent({
   watch: {
     markdown() {
       this.renderMarkdown();
-    },
-    openDefaultBrower() {
-      document.addEventListener('click', (event: MouseEvent) => {
-        if (event.target != null) {
-          const target = event.target as HTMLAnchorElement;
-          if (target.tagName === 'A' && target.href.startsWith('http') && target.href.startsWith('https')) {
-            event.preventDefault()
-            shell.openExternal(target.href)
-          }
-        }
-      })
     }
   },
   methods: {
@@ -55,6 +43,14 @@ export default defineComponent({
         linkify: true,  // 将类似 URL 的文本自动转换为链接。
         typographer: true,
         breaks: true,  // 转换段落里的 '\n' 到 <br>。
+        highlight: (str, lang) => {
+          if (lang && hljs.getLanguage(lang)) {
+            try {
+              return `<pre class="hljs"><code>${hljs.highlight(lang, str, true).value}</code></pre>`;
+            } catch (__) {}
+          }
+          return `<pre class="hljs"><code>${md.utils.escapeHtml(str)}</code></pre>`;
+        }
       });
       // markdown核心文本转换方法
       this.renderedMarkdown = md.render(this.markdown);
@@ -71,25 +67,26 @@ export default defineComponent({
           let classArr = ele.className.split(' ');
           let languageArr = classArr[0].split('-');
           if (languageArr.length !== 2) {
-            hljs.highlightElement(<HTMLElement>ele);
+            hljs.highlightBlock(<HTMLElement>ele);
             return true;
           }
           let language = languageArr[1].trim();
           if (hljs.getLanguage(language)) {
-            hljs.highlightElement(<HTMLElement>ele);
+            hljs.highlightBlock(<HTMLElement>ele);
             return true;
           }
         });
         // 拿取所有的code代码元素，进行赋值高亮模式
         document.querySelectorAll("code").forEach(function (ele) {
-          hljs.highlightElement(ele);
+          console.log('code下面的ele',ele)
+          hljs.highlightBlock(ele);
         });
         // 生成代码块的一键复制按钮和行号
         if (this.markdown.endsWith('（BPE）')) {
+          console.log('this.markdown',this.markdown);
           const elem = (document.querySelectorAll(".containMain")[0].children)[this.num - 1];
-          console.log('elem',elem);
-          const codeDoms = elem.querySelectorAll('pre');
-          Array.from(codeDoms).forEach((item, index) => {
+          const codeDomes = elem.querySelectorAll('pre');
+          Array.from(codeDomes).forEach((item, index) => {
             if (item.children && item.children.length > 0) {
               // 计算行号数(包含了一行空和一行复制，所以要减去2)
               // let num = item.innerText.split('\n').length - 1
@@ -136,12 +133,12 @@ export default defineComponent({
                   (langDom as unknown as HTMLElement).setAttribute('class', 'lang-cols');
                   item.appendChild(langDom);
                 }
-              });
+              })
             }
-          });
+          })
         }
       })
-    },
+    }
   },
   destroyed() {
     (this.clipboard as unknown as Clipboard)!.destroy()
@@ -149,41 +146,6 @@ export default defineComponent({
 });
 </script>
 <style>
-/* 语法高亮 */
-.hljs-container {
-  position: relative;
-  display: block;
-  display: flex;
-  width: max-content;
-  margin-left: 100px;
-  padding: 30px 10px 2px 0;
-  overflow-x: hidden;
-  font-size: 14px;
-  line-height: 24px;
-  text-align: left;
-  background: #21252b;
-  box-shadow: 0 10px 30px 0 rgb(0 0 0 / 40%);
-}
-
-/** 3个点 */
-.hljs-container::before {
-  position: absolute;
-  top: 10px;
-  left: 15px;
-  width: 12px;
-  height: 12px;
-  overflow: visible;
-  font-weight: 700;
-  font-size: 16px;
-  line-height: 12px;
-  white-space: nowrap;
-  text-indent: 75px;
-  background-color: #fc625d;
-  border-radius: 16px;
-  box-shadow: 20px 0 #fdbc40, 40px 0 #35cd4b;
-  content: attr(codetype);
-}
-
 /** 滚动条 */
 :deep(.hljs) {
   overflow-x: auto;

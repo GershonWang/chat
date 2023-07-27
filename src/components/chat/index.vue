@@ -16,7 +16,7 @@
                 <el-icon><star-filled /></el-icon>
               </el-divider>
               <div v-if="item.showImage" style="margin-top: 25px;">
-                <img :src="item.imageUrl" @click="isShowImage(item.imageUrl)" style="width: 300px;">
+                <img :src="item.imageUrl" @click="isShowImage(item.imageUrl)" style="width: 300px;" alt="">
               </div>
               <div v-if="item.showMarkdown">
                 <MarkdownRenderer :markdown="item.markdownText" :num="item.id"></MarkdownRenderer>
@@ -25,7 +25,7 @@
             <big-img v-if="showImg" @click="showImg = false" :imgSrc="bigImgSrc"></big-img>
           </div>
         </el-main>
-        <el-footer class="comtainer-footer">
+        <el-footer class="container-footer">
           <el-input ref="textareaRef" v-model="textarea" :rows="2" type="textarea" placeholder="请输入您要咨询的问题..."
             @keydown.ctrl.enter="sendQue()" :disabled="isDisabled" :resize="'none'"
             input-style="width:600px;background-color:#2D333B;color:white;margin-right: 30px;" />
@@ -51,15 +51,16 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
-import { Ref, reactive, ref, nextTick } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { StarFilled } from '@element-plus/icons-vue'
-import { EventSourcePolyfill } from "event-source-polyfill";
-import { chatApi, closeChatApi } from '@/api/chat'
-import { setAPIKeyApi } from '@/api/config'
+import {useRouter} from 'vue-router'
+import {nextTick, reactive, ref, Ref} from 'vue'
+import {ElMessage, ElMessageBox} from 'element-plus'
+import {StarFilled} from '@element-plus/icons-vue'
+import {EventSourcePolyfill} from "event-source-polyfill";
+import {chatApi, closeChatApi} from '@/api/chat'
+import {setAPIKeyApi} from '@/api/config'
 import MarkdownRenderer from '@/renderer/MarkdownRenderer.vue';
 import BigImg from '@/renderer/ImageViewRenderer.vue'
+import {shell} from "electron";
 
 const router = useRouter();
 const textarea: Ref<string> = ref('')
@@ -103,9 +104,8 @@ let itemId = 1;
  * 自动滚动
  */
 function autoScroll() {
-  // 获取dom元素的高度并赋值给scrollTop,实现滚动条移动到最底部
-  const contain = containMainRef.value as unknown as HTMLElement;
-  if(contain != null) {
+  const contain = containMainRef.value;
+  if ("scrollTop" in contain) {
     contain.scrollTop = contain.scrollHeight;
   }
 }
@@ -144,15 +144,15 @@ function setAPIKey() {
  * 获取随机数
  */
 function uuid() {
-  var s = [];
-  var hexDigits = "0123456789abcdef";
-  for (var i = 0; i < 36; i++) {
-    s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+  const array = [];
+  const hexDigits = "0123456789abcdef";
+  for (let i = 0; i < 36; i++) {
+    const number = Math.floor(Math.random() * 0x10);
+    array[i] = hexDigits.slice(number,number + 1);
   }
-  s[14] = "4";
-  s[8] = s[13] = s[18] = s[23] = "-";
-  var uuid = s.join("");
-  return uuid;
+  array[14] = "4";
+  array[8] = array[13] = array[18] = array[23] = "-";
+  return array.join("");
 }
 
 /**
@@ -199,7 +199,7 @@ function isShowImage(imageUrl: string) {
   console.log("请求chat时获取到的uid", localUid);
   /* 5.获取输入框内容,并判断是否为空 */
   let inputMsg = textarea.value;
-  if (inputMsg === null || inputMsg === '') {
+  if (inputMsg == null || inputMsg === '') {
     ElMessage.warning("发送内容不能为空！");
     return;
   }
@@ -223,23 +223,18 @@ function isShowImage(imageUrl: string) {
   // 6.5 强制更新
   state.items = [...state.items] 
   // 6.6 自动滚动
-  nextTick(() => {
-    autoScroll() 
+  await nextTick(() => {
+    autoScroll()
   });
   // 6.7 itemId加1
   itemId++; 
   // 6.8 右侧菜单追加问题内容
-  var list = document.querySelector(".quest_list");
-  let li = document.createElement("li")
-  li.setAttribute("style","margin-buttom:12px");
+  const list = document.querySelector(".quest_list");
+  let li = document.createElement("li");
+  li.setAttribute("style","margin-bottom:12px");
   let liDom = li.cloneNode(false);
-  let a = document.createElement("a");
-  a.setAttribute("href","javascript:void(0)");
-  a.setAttribute("onClick","alert('textarea.value = msg;')");
-  let aDom = a.cloneNode(false);
   let lang = document.createTextNode(inputMsg);
-  (aDom as unknown as HTMLElement).appendChild(lang);
-  (liDom as unknown as HTMLElement).appendChild(aDom);
+  (liDom as unknown as HTMLElement).appendChild(lang);
   (list as unknown as HTMLElement).appendChild(liDom);
   /* 7.建立SSE网络连接,并将缓存中的uid传入请求头 */
   const eventSource = new EventSourcePolyfill(import.meta.env.VITE_BASE_URL + '/createSse', {
@@ -269,8 +264,8 @@ function isShowImage(imageUrl: string) {
       // 强制更新
       state.items = [...state.items] 
       // 自动滚动
-      nextTick(() => {
-        autoScroll() 
+      await nextTick(() => {
+        autoScroll()
       });
       return;
     }
@@ -280,8 +275,8 @@ function isShowImage(imageUrl: string) {
       // 强制更新
       state.items = [...state.items]
       // 自动滚动
-      nextTick(() => {
-        autoScroll() 
+      await nextTick(() => {
+        autoScroll()
       });
       return;
     }
@@ -295,8 +290,8 @@ function isShowImage(imageUrl: string) {
       // 强制更新
       state.items = [...state.items]
       // 自动滚动
-      nextTick(() => {
-        autoScroll() 
+      await nextTick(() => {
+        autoScroll()
       })
       isDisabled.value = false; // 重新启用(输入框/发送按钮)
       isStopDisabled.value = true; // 禁用停止按钮
@@ -312,7 +307,7 @@ function isShowImage(imageUrl: string) {
     // 强制更新
     state.items = [...state.items]
     // 自动滚动
-    nextTick(() => {
+    await nextTick(() => {
       autoScroll()
     })
   };
@@ -349,6 +344,19 @@ function stopSend() {
   state.items = [];
   itemId = 1;
 }
+
+/**
+ * 添加监听
+ */
+document.addEventListener('click', (event: MouseEvent) => {
+  if (event.target != null) {
+    const target = event.target as HTMLAnchorElement;
+    if (target.tagName === 'A' && target.href.startsWith('http') && target.href.startsWith('https')) {
+      event.preventDefault()
+      shell.openExternal(target.href)
+    }
+  }
+})
 </script>
 
 <style scoped>
@@ -356,7 +364,6 @@ function stopSend() {
   width: 100%;
   height: 100%;
 }
-
 .container-title {
   background-color: #2D333B;
   font-size: 24px;
@@ -364,13 +371,11 @@ function stopSend() {
   line-height: var(--el-header-height);
   display: none;  /* 不显示标题栏 */
 }
-
 .container-menu {
   width: 15%;
   border: solid;
   text-align: left;
 }
-
 .container-main {
   background-color: #242424;
   height: 340px;
@@ -378,13 +383,11 @@ function stopSend() {
   border: solid;
   padding-right: 5px;
 }
-
 .containMain {
   height: 100%;
   overflow: auto;
   padding-right: 20px;
 }
-
 .backdrop {
   width: 90%;
   border-radius: 15px;
@@ -394,19 +397,16 @@ function stopSend() {
   margin: 30px auto;
   padding: 15px;
 }
-
 .titleDiv {
   white-space: nowrap; /* 防止文字换行 */
   overflow: hidden; /* 超出宽度部分隐藏 */
   text-overflow: ellipsis; /* 超出宽度部分显示省略号 */
 }
-
 .title {
   color: #008000;
   font-size: 18px;
   font-weight: bold;
 }
-
 .tooltip {
   position: absolute;
   width: 95%;
@@ -418,20 +418,17 @@ function stopSend() {
   padding: 5px 10px;
   overflow-wrap: break-word;
 }
-
-.comtainer-footer {
+.container-footer {
   background-color: #2D333B;
   display: flex;
   align-items: center;
   justify-content: center;
   border: solid;
 }
-
 .quest_list {
   list-style: none;
   padding-inline: 12px;
 }
-
 .bottom-title {
   border: solid;
   padding: 5px;
@@ -446,11 +443,9 @@ function stopSend() {
   text-align: left;
   width: max-content;
 }
-
 .run-title:hover {
   animation-play-state: paused;
 }
-
 .run-title:not(:hover) {
   animation-play-state: running;
 }
