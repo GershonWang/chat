@@ -46,10 +46,10 @@ export default defineComponent({
         highlight: (str, lang) => {
           if (lang && hljs.getLanguage(lang)) {
             try {
-              return `<pre class="hljs"><code>${hljs.highlight(lang, str, true).value}</code></pre>`;
+              return hljs.highlight(lang, str, true).value;
             } catch (__) {}
           }
-          return `<pre class="hljs"><code>${md.utils.escapeHtml(str)}</code></pre>`;
+          return md.utils.escapeHtml(str);
         }
       });
       // markdown核心文本转换方法
@@ -62,43 +62,21 @@ export default defineComponent({
             el.setAttribute('target', '_blank');
           }
         });
-        // 拿取所有的pre code代码元素，进行赋值高亮模式
-        document.querySelectorAll("pre code").forEach((ele) => {
-          let classArr = ele.className.split(' ');
-          let languageArr = classArr[0].split('-');
-          if (languageArr.length !== 2) {
-            hljs.highlightBlock(<HTMLElement>ele);
-            return true;
-          }
-          let language = languageArr[1].trim();
-          if (hljs.getLanguage(language)) {
-            hljs.highlightBlock(<HTMLElement>ele);
-            return true;
-          }
+        // 给所有的pre标签添加hljs的class样式
+        document.querySelectorAll('pre').forEach(((ele) => {
+          ele.setAttribute('class','hljs');
+          ele.setAttribute('style','position: relative;');
+        }));
+        // 拿取所有的code代码元素，追加hljs的class样式
+        document.querySelectorAll("code").forEach((ele) => {
+          ele.classList.add('hljs');
         });
-        // 拿取所有的code代码元素，进行赋值高亮模式
-        document.querySelectorAll("code").forEach(function (ele) {
-          console.log('code下面的ele',ele)
-          hljs.highlightBlock(ele);
-        });
-        // 生成代码块的一键复制按钮和行号
+        // 生成代码块的一键复制按钮和代码类型
         if (this.markdown.endsWith('（BPE）')) {
-          console.log('this.markdown',this.markdown);
           const elem = (document.querySelectorAll(".containMain")[0].children)[this.num - 1];
           const codeDomes = elem.querySelectorAll('pre');
           Array.from(codeDomes).forEach((item, index) => {
             if (item.children && item.children.length > 0) {
-              // 计算行号数(包含了一行空和一行复制，所以要减去2)
-              // let num = item.innerText.split('\n').length - 1
-              // let ul = document.createElement("ul");
-              // ul.setAttribute('class', 'hljs-code-number')
-              // for (let i = 0; i < num; i++) {
-              //   let childLi = document.createElement("li")
-              //   let li_text = document.createTextNode(<string><unknown>(i + 1));
-              //   childLi.appendChild(li_text)
-              //   ul.appendChild(childLi)
-              // }
-              // item.appendChild(ul)
               // 一键复制标签元素
               let i = document.createElement("i")
               i.setAttribute('class', 'el-icon-copy-document hljs-copy' + this.num + index)
@@ -146,52 +124,7 @@ export default defineComponent({
 });
 </script>
 <style>
-/** 滚动条 */
-:deep(.hljs) {
-  overflow-x: auto;
-}
-
-:deep(.hljs::-webkit-scrollbar) {
-  width: 12px !important;
-  height: 12px !important;
-}
-
-:deep(.hljs::-webkit-scrollbar-thumb) {
-  height: 30px !important;
-  background: #d1d8e6;
-  background-clip: content-box;
-  border: 2px solid transparent;
-  border-radius: 19px;
-  opacity: 0.8;
-}
-
-:deep(.hljs::-webkit-scrollbar-thumb:hover) {
-  background: #a5b3cf;
-  background-clip: content-box;
-  border: 2px solid transparent;
-}
-
-:deep(.hljs::-webkit-scrollbar-track-piece) {
-  width: 30px;
-  height: 30px;
-  background: #333;
-}
-
-::-webkit-scrollbar-button {
-  display: none;
-}
-
-/** 行数样式 */
-.hljs-code-number {
-  position: absolute;
-  top: 0px;
-  padding: 0 10px;
-  color: #d1d8e6;
-  list-style: none;
-  border-right: 1px solid #d1d8e6;
-}
-
-/** 复制样式 */
+/** 复制标签的样式 */
 .el-icon-copy-document {
   position: absolute;
   top: 10px;
@@ -205,11 +138,7 @@ export default defineComponent({
   border-radius: 3px;
   cursor: pointer;
 }
-
-pre {
-  position: relative;
-}
-
+/** 代码类型的样式 */
 .lang-cols {
   position: absolute;
   top: 8px;

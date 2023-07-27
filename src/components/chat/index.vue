@@ -196,7 +196,6 @@ function isShowImage(imageUrl: string) {
     ElMessage.warning("获取缓存中的uuid失败！");
     return;
   }
-  console.log("请求chat时获取到的uid", localUid);
   /* 5.获取输入框内容,并判断是否为空 */
   let inputMsg = textarea.value;
   if (inputMsg == null || inputMsg === '') {
@@ -246,8 +245,7 @@ function isShowImage(imageUrl: string) {
     // 启用停止按钮
     isStopDisabled.value = false 
     // 发送提问chat请求
-    chatApi({ msg: inputMsg }, localUid).catch(res => {
-      console.log('接口报错打印', res)
+    chatApi({ msg: inputMsg }, localUid).catch(() => {
       ElMessage.error('网络请求异常，请再次尝试!');
       event.target.close(); // 关闭sse连接
       isDisabled.value = false; // 重新启用(输入框/发送按钮)
@@ -257,7 +255,6 @@ function isShowImage(imageUrl: string) {
   }
   /* 9. 发送消息 */
   eventSource.onmessage = async (event) => {
-    // console.log('onmessage', event);
     if (event.lastEventId == "[IMG]") {
       newItem.imageUrl = new URL(event.data, import.meta.url).href;
       newItem.showImage = true;
