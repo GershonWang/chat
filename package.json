@@ -14,8 +14,6 @@
     "dev": "vite --mode development",
     "pro": "vite --mode production",
     "build": "vue-tsc --noEmit && vite build && electron-builder",
-    "buildDEB": "vue-tsc --noEmit && vite build && electron-builder --linux deb",
-    "buildWIN": "vue-tsc --noEmit && vite build && electron-builder --windows nsis:x64",
     "preview": "vite preview"
   },
   "devDependencies": {

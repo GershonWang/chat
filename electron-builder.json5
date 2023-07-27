@@ -14,13 +14,12 @@
     target: ['dmg']
   },
   win: {
+    artifactName: '${productName}_${version}.${ext}',
     target: [
       {
-        target: 'nsis',
-        arch: ['x64']
+        target: 'nsis',arch: ['x64']
       }
-    ],
-    artifactName: '${productName}_${version}.${ext}'
+    ]
   },
   nsis: {
     perMachine: false,
@@ -35,5 +34,16 @@
     createStartMenuShortcut: true, // 创建开始菜单图标
     // shortcutName: 'xxxx', // 图标名称
     // include: 'build/script/installer.nsh' // 包含的自定义nsis脚本
+  },
+  linux: {
+    artifactName: '${productName}_${version}.${ext}',
+    target: ['deb','AppImage','apk','tar.gz'],
+    category: 'Utility',
+    icon: 'public/logo_512x512.png',
+  },
+  deb: {
+    packageName: '/opt/apps/com.dongpl.chat/files',
+    depends: [],
+    // options: '',
   }
 }
