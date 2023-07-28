@@ -135,7 +135,7 @@ const handleUsernameEnter = () => {
   (document.querySelector('input[type=password]') as HTMLInputElement).focus();
 }
 /**
- * 关闭程序
+ * 发送信息到主线程执行关闭程序
  */
 const closeApp = () => {
   ipcRenderer.send('close-app');
@@ -149,7 +149,6 @@ ipcRenderer.on('app_version', (event, arg) => {
   version.value.innerText = arg.version;
 });
 //新版本检测
-console.log("开始新版本检测")
 ipcRenderer.send('checkForUpdate');
 ipcRenderer.on('checking_for', (event,msg) => {
   console.log("checking_for",msg)
@@ -190,6 +189,10 @@ ipcRenderer.on('updateError', (arg) => {
   console.log('updateError',arg)
   message.value.innerText = '更新失败请检测网络';
   notification.value.classList.remove('hidden');
+});
+// 打印日志
+ipcRenderer.on('printError', (arg) => {
+  console.log('printError',arg)
 });
 // 下次再说
 function closeNotification() {

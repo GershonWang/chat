@@ -38,7 +38,7 @@ export default defineComponent({
   },
   methods: {
     renderMarkdown() {
-      const md = new MarkdownIt({
+      const md: MarkdownIt = new MarkdownIt({
         html: true,  // 在源码中启用 HTML 标签
         linkify: true,  // 将类似 URL 的文本自动转换为链接。
         typographer: true,
@@ -46,7 +46,7 @@ export default defineComponent({
         highlight: (str, lang) => {
           if (lang && hljs.getLanguage(lang)) {
             try {
-              return hljs.highlight(lang, str, true).value;
+              return hljs.highlight(lang, str).value;
             } catch (__) {}
           }
           return md.utils.escapeHtml(str);
@@ -118,7 +118,7 @@ export default defineComponent({
       })
     }
   },
-  destroyed() {
+  beforeUnmount() {
     (this.clipboard as unknown as Clipboard)!.destroy()
   }
 });

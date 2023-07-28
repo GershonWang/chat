@@ -104,7 +104,7 @@ let itemId = 1;
  * 自动滚动
  */
 function autoScroll() {
-  const contain = containMainRef.value;
+  const contain = containMainRef.value as unknown as HTMLElement;
   if ("scrollTop" in contain) {
     contain.scrollTop = contain.scrollHeight;
   }

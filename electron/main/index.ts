@@ -24,6 +24,52 @@ const preload = join(__dirname, '../preload/index.js')
 const url = process.env.VITE_DEV_SERVER_URL
 const indexHtml = join(process.env.DIST, 'index.html')
 
+/****************************************** 自动更新 ***********************************************/
+function updateHandle() {
+  // 设置更新源为GitHub Release
+  autoUpdater.setFeedURL({
+    provider: 'github',
+    owner: 'GershonWang',
+    repo: 'chat',
+    releaseType: 'release'
+  })
+  // 检查更新
+  autoUpdater.checkForUpdates();
+  // 设置不自动下载
+  // autoUpdater.autoDownload = false;
+  autoUpdater.on('error', function (error) {
+    console.log('更新出现异常');
+    win.webContents.send('updateError', error)
+  });
+  autoUpdater.on('checking-for-update', function () {
+    console.log('开始检测更新,触发登录页面中的checking_for事件接收');
+    win.webContents.send('checking_for', "正在检测更新...")
+  });
+  autoUpdater.on('update-available', function (info) {
+    console.log('当发现一个可用更新的时候触发，更新包下载会自动开始',info);
+    win.webContents.send('update_available')
+  });
+  autoUpdater.on('update-not-available', function (info) {
+    console.log('当没有可用更新的时候触发',info);
+    win.webContents.send('update-not-available')
+  });
+  autoUpdater.on('download-progress', function (progressObj) {
+    console.log('更新下载进度事件');
+    win.webContents.send('downloadProgress', progressObj)
+  })
+  // 安装包下载完成
+  // autoUpdater.on('update-downloaded', function () {
+  //   win.webContents.send('update_downloaded')
+  //   ipcMain.on('isUpdateNow', (e, arg) =>{
+  //     console.log(arg);
+  //     console.log("开始更新");
+  //     //退出并安装
+  //     autoUpdater.quitAndInstall();
+  //   });
+  // });
+  console.log('主线程 autoUpdater',autoUpdater)
+}
+
 async function createWindow() {
   win = new BrowserWindow({
     title: 'Main window',
@@ -44,18 +90,17 @@ async function createWindow() {
   Menu.setApplicationMenu(null);
   // 根据环境判断是否开启开发者工具
   if (process.env.VITE_DEV_SERVER_URL) {
-    win.loadURL(url)
+    await win.loadURL(url)
     // dev开发环境，打开devTool开发者工具
     win.webContents.openDevTools({ mode: 'detach' })
   } else {
-    win.loadFile(indexHtml)
+    await win.loadFile(indexHtml)
+    win.webContents.openDevTools({ mode: 'detach' })
   }
-
   // Test actively push message to the Electron-Renderer
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('main-process-message', new Date().toLocaleString())
   })
-
   // Make all links open with the browser, not with the application
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith('https:') || url.startsWith('http:')) shell.openExternal(url)
@@ -87,7 +132,7 @@ app.on('activate', () => {
   if (allWindows.length) {
     allWindows[0].focus()
   } else {
-    createWindow()
+    createWindow();
   }
 })
 
@@ -100,90 +145,39 @@ ipcMain.handle('open-win', (_, arg) => {
       contextIsolation: false,
     },
   })
-
   if (process.env.VITE_DEV_SERVER_URL) {
-    childWindow.loadURL(`${url}#${arg}`)
+    childWindow.loadURL(`${url}#${arg}`).then(r => {
+      console.log('childWindow.loadURL r',r)
+    })
   } else {
-    childWindow.loadFile(indexHtml, { hash: arg })
-  }
+    childWindow.loadFile(indexHtml, {hash: arg}).then(r => {
+      console.log('childWindow.loadFile r',r)
+    })
+   }
 })
 
+// 获取当前版本
+ipcMain.on('app_version', (event) => {
+  event.sender.send('app_version', { version: app.getVersion() });
+});
+// 登录页面加载后触发此更新
+ipcMain.on("checkForUpdate", (event) => {
+  console.log('登录页面加载后触发此更新',event)
+  console.log('子加载 autoUpdater',autoUpdater)
+  autoUpdater.checkForUpdates().then(r => {
+    console.log('执行自动更新检查',r)
+  })
+  console.log('加载后 autoUpdater',autoUpdater)
+})
+// 立即更新
+ipcMain.on('isUpdateNow', (event) => {
+  autoUpdater.downloadUpdate().then((path) => {
+    event.sender.send('UpdateMessage', path);
+  }).catch((e) => {
+    event.sender.send('updateError', e);
+  })
+})
 // 监听页面发出的关闭程序请求
 ipcMain.on('close-app', () => {
   app.quit();
 });
-
-/****************************************** 自动更新 ***********************************************/
-// // 检测更新，在你想要检查更新的时候执行，renderer事件触发后的操作自行编写
-// let message = {
-//   error: '检查更新出错',
-//   checking: '正在检查更新……',
-//   updateAva: '检测到新版本，正在下载……',
-//   updateNotAva: '现在使用的就是最新版本，不用更新'
-// }
-
-//检测更新
-function updateHandle() {
-  // 服务器静态文件地址，文章后面附上ng配置及需要上传的文件
-  // const updateUrl = 'https://github.com/GershonWang/chat/releases/download/'
-  // 设置检查更新地址
-  // autoUpdater.setFeedURL(updateUrl);
-
-  // 设置更新源为GitHub Release
-  autoUpdater.setFeedURL({
-    provider: 'github',
-    owner: 'GershonWang',
-    repo: 'chat',
-    releaseType: 'release'
-  })
-  // 设置不自动下载
-  autoUpdater.autoDownload = false;
-  // 登录页面加载后触发此更新
-  ipcMain.on("checkForUpdate", () => {
-    //执行自动更新检查
-    autoUpdater.checkForUpdates();
-  })
-  // 更新出现异常
-  autoUpdater.on('error', function (error) {
-    win.webContents.send('updateError', error)
-  });
-  // 开始检测更新
-  autoUpdater.on('checking-for-update', function () {
-    // 触发登录页面中的checking_for事件接收
-    win.webContents.send('checking_for', "正在检测更新...")
-  });
-  // 当发现一个可用更新的时候触发，更新包下载会自动开始
-  autoUpdater.on('update-available', function (info) {
-    win.webContents.send('update_available')
-  });
-  //当没有可用更新的时候触发
-  autoUpdater.on('update-not-available', function (info) {
-    win.webContents.send('update-not-available')
-  });
-  // 更新下载进度事件
-  autoUpdater.on('download-progress', function (progressObj) {
-    win.webContents.send('downloadProgress', progressObj)
-  })
-  // 安装包下载完成
-  // autoUpdater.on('update-downloaded', function () {
-  //   win.webContents.send('update_downloaded')
-  //   ipcMain.on('isUpdateNow', (e, arg) =>{
-  //     console.log(arg);
-  //     console.log("开始更新");
-  //     //退出并安装
-  //     autoUpdater.quitAndInstall();
-  //   });
-  // });
-  // 获取当前版本
-  ipcMain.on('app_version', (event) => {
-    event.sender.send('app_version', { version: app.getVersion() });
-  });
-  // 立即更新
-  ipcMain.on('isUpdateNow', (event) => {
-    autoUpdater.downloadUpdate().then((path) => {
-      event.sender.send('UpdateMessage', path);
-    }).catch((e) => {
-      event.sender.send('updateError', e);
-    })
-  })
-}

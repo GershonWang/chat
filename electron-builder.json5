@@ -9,6 +9,12 @@
     output: 'release/${version}'
   },
   files: ['dist-electron', 'dist'],
+  publish: [
+    {
+      provider: 'generic',
+      url: 'https://github.com/GershonWang/chat/releases'
+    }
+  ],
   mac: {
     artifactName: '${productName}_${version}.${ext}',
     target: ['dmg']
@@ -37,7 +43,7 @@
   },
   linux: {
     artifactName: '${productName}_${version}.${ext}',
-    target: ['deb','AppImage','apk','tar.gz'],
+    target: ['deb'],
     category: 'Utility',
     icon: 'public/logo_512x512.png',
   },
