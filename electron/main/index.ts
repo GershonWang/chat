@@ -31,12 +31,11 @@ function updateHandle() {
     provider: 'github',
     owner: 'GershonWang',
     repo: 'chat',
-    releaseType: 'release'
+    releaseType: 'release',
+    private: true
   })
-  // 检查更新
-  autoUpdater.checkForUpdates();
   // 设置不自动下载
-  // autoUpdater.autoDownload = false;
+  autoUpdater.autoDownload = false;
   autoUpdater.on('error', function (error) {
     console.log('更新出现异常');
     win.webContents.send('updateError', error)
@@ -58,16 +57,15 @@ function updateHandle() {
     win.webContents.send('downloadProgress', progressObj)
   })
   // 安装包下载完成
-  // autoUpdater.on('update-downloaded', function () {
-  //   win.webContents.send('update_downloaded')
-  //   ipcMain.on('isUpdateNow', (e, arg) =>{
-  //     console.log(arg);
-  //     console.log("开始更新");
-  //     //退出并安装
-  //     autoUpdater.quitAndInstall();
-  //   });
-  // });
-  console.log('主线程 autoUpdater',autoUpdater)
+  autoUpdater.on('update-downloaded', function () {
+    win.webContents.send('update_downloaded')
+    ipcMain.on('isUpdateNow', (e, arg) =>{
+      console.log(arg);
+      console.log("开始更新");
+      //退出并安装
+      autoUpdater.quitAndInstall();
+    });
+  });
 }
 
 async function createWindow() {

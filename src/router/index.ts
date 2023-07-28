@@ -1,19 +1,16 @@
 import {createRouter,createWebHashHistory} from 'vue-router'
 
-import Index from '../components/index.vue'
-import Chat from '../components/chat/index.vue'
-
 const router = createRouter({
     // 4. 内部提供了 history 模式的实现。为了简单起见，我们在这里使用 hash 模式。
     history: createWebHashHistory(),
     routes: [
         { 
             path: '/', 
-            component: Index 
+            component: () => import("../components/index.vue")
         },
         { 
             path: '/chat', 
-            component: Chat
+            component: () => import("../components/chat/index.vue")
         },
         {
             path: '/demo',
@@ -21,15 +18,11 @@ const router = createRouter({
         },
         { 
             path: '/helloWorld', 
-            component: () => import("../components/demo/HelloWorld.vue") 
+            component: () => import("../components/demo/helloWorld.vue")
         },
         { 
             path: '/test_mark', 
             component: () => import("../components/demo/test_mark.vue") 
-        },
-        { 
-            path: '/update', 
-            component: () => import("../components/update/update.vue") 
         },
     ], // `routes: routes` 的缩写
 })

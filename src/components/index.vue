@@ -18,9 +18,6 @@
               <el-button type="primary" @click="submitForm(formRef)">登陆账户</el-button>
               <el-button type="info" @click="resetForm(formRef)">重新输入</el-button>
               <el-button type="success" @click="registForm(formRef)">注册账户</el-button>
-          <!-- <el-button type="danger" round><a @click="closeApp">关闭程序</a></el-button> -->
-          <!-- <el-button type="success" round><router-link to="/demo">测试跳转</router-link></el-button> -->
-          <!-- <el-button type="success" round><router-link to="/update">测试update</router-link></el-button> -->
           </el-form>
         </el-card>
       </el-main>
@@ -134,13 +131,6 @@ const resetForm = (formEl: FormInstance | undefined) => {
 const handleUsernameEnter = () => {
   (document.querySelector('input[type=password]') as HTMLInputElement).focus();
 }
-/**
- * 发送信息到主线程执行关闭程序
- */
-const closeApp = () => {
-  ipcRenderer.send('close-app');
-}
-
 /********************************************************************************************/
 //获取当前版本
 ipcRenderer.send('app_version');
@@ -167,12 +157,12 @@ ipcRenderer.on('update-not-available', () => {
   message.value.innerText = '现在使用的就是最新版本，不用更新';
   notification.value.classList.remove('hidden');
 });
-// //下载成功触发
-// ipcRenderer.on('update_downloaded', () => {
-//   ipcRenderer.removeAllListeners('update_downloaded');
-//   message.value.innerText = '下载成功！是否更新?';
-//   notification.value.classList.remove('hidden');
-// });
+//下载成功触发
+ipcRenderer.on('update_downloaded', () => {
+  ipcRenderer.removeAllListeners('update_downloaded');
+  message.value.innerText = '下载成功！是否更新?';
+  notification.value.classList.remove('hidden');
+});
 //下载中触发
 ipcRenderer.on("downloadProgress", (event, progressObj) => {
   console.log('downloadProgress',progressObj);

@@ -119,7 +119,9 @@ export default defineComponent({
     }
   },
   beforeUnmount() {
-    (this.clipboard as unknown as Clipboard)!.destroy()
+    if(this.clipboard != null) {
+      (this.clipboard as Clipboard)!.destroy()
+    }
   }
 });
 </script>

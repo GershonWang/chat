@@ -48,7 +48,7 @@
     icon: 'public/logo_512x512.png',
   },
   deb: {
-    packageName: '/opt/apps/com.dongpl.chat/files',
+    packageName: 'com.dongpl.chat',
     depends: [],
     // options: '',
   }

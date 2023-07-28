@@ -1,6 +1,6 @@
 <template>
-    <el-button type="success" @click="router.push('/')">返回</el-button><br>
-
+    <el-button type="success" @click="router.push('/')">返回登录页面</el-button><br>
+    <el-button type="success" @click="router.back()">返回上一页</el-button><br>
     <div class="box">
         <div class="backdrop">毛玻璃</div>
         <div class="compare">对比</div>

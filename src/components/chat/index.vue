@@ -2,8 +2,15 @@
   <el-container class="container">
     <el-header class="container-title">ChatGPT(G版)</el-header>
     <el-container>
-      <!-- <el-aside class="container-menu"></el-aside> -->
-      <el-container>
+       <el-aside class="container-left-menu">
+         <h2 style="text-align: center;">历史问题</h2>
+         <div class="compare-container">
+           <div class="compare" v-for="questionItem in questionItems" @click="reWriteQues(questionItem.text)">
+             <a>{{questionItem.text}}</a>
+           </div>
+         </div>
+       </el-aside>
+      <el-container class="container-center-main">
         <el-main class="container-main">
           <div class="containMain" ref="containMainRef">
             <div class="backdrop" v-for="item in state.items" :key="item.id">
@@ -12,9 +19,7 @@
               </div>
               <div class="tooltip" v-if="item.showTip">{{ item.title }}</div>
               <!-- <hr> 添加一条分界线 -->
-              <el-divider>
-                <el-icon><star-filled /></el-icon>
-              </el-divider>
+              <el-divider><el-icon><star-filled /></el-icon></el-divider>
               <div v-if="item.showImage" style="margin-top: 25px;">
                 <img :src="item.imageUrl" @click="isShowImage(item.imageUrl)" style="width: 300px;" alt="">
               </div>
@@ -33,12 +38,16 @@
             style="color: white;font-weight: bold;background-color: blueviolet;">发送(Ctrl+Enter)</el-button>
           <el-button type="danger" @click="stopSend" :disabled="isStopDisabled" style="color: white;font-weight: bold;">停止发送</el-button>
           <el-button @click="reset()" style="color: black;font-weight: bold;">清空</el-button>
-          <el-button @click="router.back()">返回登陆</el-button>
         </el-footer>
       </el-container>
-      <el-aside class="container-menu">
-        <h2 style="text-align: center;">历史问题</h2>
-        <ul class="quest_list"></ul>
+      <el-aside class="container-right-menu">
+        <div class="bottom-button">
+          <el-button @click="router.back()">返回登陆</el-button>
+          <el-button type="success"><router-link to="/demo">测试demo</router-link></el-button>
+          <el-button type="success"><router-link to="/helloWorld">测试helloWorld</router-link></el-button>
+          <el-button type="success"><router-link to="/test_mark">测试test_mark</router-link></el-button>
+          <el-button type="danger" round><a @click="closeApp">关闭程序</a></el-button>
+        </div>
       </el-aside>
     </el-container>
     <div class="bottom-title">
@@ -60,7 +69,7 @@ import {chatApi, closeChatApi} from '@/api/chat'
 import {setAPIKeyApi} from '@/api/config'
 import MarkdownRenderer from '@/renderer/MarkdownRenderer.vue';
 import BigImg from '@/renderer/ImageViewRenderer.vue'
-import {shell} from "electron";
+import {ipcRenderer, shell} from "electron";
 
 const router = useRouter();
 const textarea: Ref<string> = ref('')
@@ -88,6 +97,8 @@ interface State {
 const state: State = reactive<State>({
   items: []
 });
+
+const questionItems = ref([]);
 
 // 获取登陆token
 let localToken = localStorage.getItem('token');
@@ -227,14 +238,12 @@ function isShowImage(imageUrl: string) {
   });
   // 6.7 itemId加1
   itemId++; 
-  // 6.8 右侧菜单追加问题内容
-  const list = document.querySelector(".quest_list");
-  let li = document.createElement("li");
-  li.setAttribute("style","margin-bottom:12px");
-  let liDom = li.cloneNode(false);
-  let lang = document.createTextNode(inputMsg);
-  (liDom as unknown as HTMLElement).appendChild(lang);
-  (list as unknown as HTMLElement).appendChild(liDom);
+  // 6.8 左侧菜单追加问题内容
+  const questionItem = {
+    text: inputMsg
+  }
+  questionItems.value.push(questionItem)
+
   /* 7.建立SSE网络连接,并将缓存中的uid传入请求头 */
   const eventSource = new EventSourcePolyfill(import.meta.env.VITE_BASE_URL + '/createSse', {
     headers: { 'uid': localUid },
@@ -342,6 +351,11 @@ function stopSend() {
   itemId = 1;
 }
 
+function reWriteQues(questionMsg) {
+  textarea.value = questionMsg;
+  (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
+}
+
 /**
  * 添加监听
  */
@@ -354,24 +368,58 @@ document.addEventListener('click', (event: MouseEvent) => {
     }
   }
 })
+/**
+ * 发送信息到主线程执行关闭程序
+ */
+const closeApp = () => {
+  ipcRenderer.send('close-app');
+}
 </script>
 
 <style scoped>
+/******************** 整体宽高 ********************/
 .container {
   width: 100%;
   height: 100%;
 }
+/********************* 标题栏 *********************/
 .container-title {
   background-color: #2D333B;
   font-size: 24px;
   font-weight: bold;
   line-height: var(--el-header-height);
-  display: none;  /* 不显示标题栏 */
+  display: none;
 }
-.container-menu {
+/******************** 左侧菜单 ********************/
+.container-left-menu {
   width: 15%;
   border: solid;
+  position: relative;
   text-align: left;
+}
+.compare {
+  margin: 10px;
+  padding: 5px;
+  border-radius: 10px;
+  display: flex;
+  overflow-wrap: anywhere;
+  animation: rainbow 8s infinite;
+}
+.compare:hover {
+  cursor: grabbing;
+}
+.compare a {
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
+.compare-container {
+  height: 90%;
+  overflow: auto;
+}
+/****************** 中间内容 *****************/
+.container-center-main {
+  background-color: white;
 }
 .container-main {
   background-color: #242424;
@@ -394,16 +442,6 @@ document.addEventListener('click', (event: MouseEvent) => {
   margin: 30px auto;
   padding: 15px;
 }
-.titleDiv {
-  white-space: nowrap; /* 防止文字换行 */
-  overflow: hidden; /* 超出宽度部分隐藏 */
-  text-overflow: ellipsis; /* 超出宽度部分显示省略号 */
-}
-.title {
-  color: #008000;
-  font-size: 18px;
-  font-weight: bold;
-}
 .tooltip {
   position: absolute;
   width: 95%;
@@ -415,6 +453,16 @@ document.addEventListener('click', (event: MouseEvent) => {
   padding: 5px 10px;
   overflow-wrap: break-word;
 }
+.titleDiv {
+  white-space: nowrap; /* 防止文字换行 */
+  overflow: hidden; /* 超出宽度部分隐藏 */
+  text-overflow: ellipsis; /* 超出宽度部分显示省略号 */
+}
+.title {
+  color: #008000;
+  font-size: 18px;
+  font-weight: bold;
+}
 .container-footer {
   background-color: #2D333B;
   display: flex;
@@ -422,18 +470,28 @@ document.addEventListener('click', (event: MouseEvent) => {
   justify-content: center;
   border: solid;
 }
-.quest_list {
-  list-style: none;
-  padding-inline: 12px;
+/*********************** 右侧菜单 ***********************/
+.container-right-menu {
+  width: 15%;
+  border: solid;
+  position: relative;
+  text-align: left;
 }
+.bottom-button {
+  position: absolute;
+  bottom: 20px;
+  text-align: center;
+}
+.bottom-button button {
+  margin-top: 10px;
+}
+/********************* 底部滚动字幕 *********************/
 .bottom-title {
   border: solid;
   padding: 5px;
-  width: 99%;
   height: 24px;
   overflow: hidden;
 }
-
 .run-title {
   animation: scroll 50s linear infinite;
   display: inline-block;
@@ -455,5 +513,15 @@ document.addEventListener('click', (event: MouseEvent) => {
   100% {
     transform: translateX(-180%);
   }
+}
+@keyframes rainbow {
+  0% { background-color: red; }
+  14% { background-color: orange; }
+  28% { background-color: yellow; }
+  42% { background-color: green; }
+  57% { background-color: blue; }
+  71% { background-color: indigo; }
+  85% { background-color: violet; }
+  100% { background-color: red; }
 }
 </style>
