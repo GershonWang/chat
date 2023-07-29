@@ -39,7 +39,6 @@ import { reactive, ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ipcRenderer } from 'electron'
 import { loginApi, registApi } from '@/api/auth'
-import { ElMessage } from 'element-plus'
 
 const router = useRouter();
 const version = ref();
@@ -51,7 +50,7 @@ const loginForm = reactive({
   username: '',
   password: '',
 })
-
+// 校验规则
 const rules = reactive<FormRules>({
   username: [
     { required: true, message: '用户名不能为空', trigger: 'change' },

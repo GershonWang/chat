@@ -54,7 +54,6 @@
 <script setup lang="ts">
 import {useRouter} from 'vue-router'
 import {nextTick, reactive, ref, Ref} from 'vue'
-import {ElMessage, ElMessageBox} from 'element-plus'
 import {StarFilled} from '@element-plus/icons-vue'
 import {EventSourcePolyfill} from "event-source-polyfill";
 import {chatApi, closeChatApi} from '@/api/chat'

@@ -1,8 +1,8 @@
 {
   "name": "chat",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "main": "dist-electron/main/index.js",
-  "description": "一个聊天工具客户端",
+  "description": "依托ChatGPT服务构建的聊天问答客户端，目的是无需代理直接使用apiKey即可访问chatGPT服务",
   "author": "Jokul <986432015@qq.com>",
   "private": true,
   "debug": {
