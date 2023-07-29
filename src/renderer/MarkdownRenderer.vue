@@ -73,7 +73,7 @@ export default defineComponent({
         });
         // 生成代码块的一键复制按钮和代码类型
         if (this.markdown.endsWith('（BPE）')) {
-          const elem = (document.querySelectorAll(".containMain")[0].children)[this.num - 1];
+          const elem = (document.querySelector(".container-center-top")!.children)[this.num - 1];
           const codeDomes = elem.querySelectorAll('pre');
           Array.from(codeDomes).forEach((item, index) => {
             if (item.children && item.children.length > 0) {

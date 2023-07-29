@@ -1,34 +1,27 @@
 <template>
   <el-container class="container">
     <el-header class="container-title">ChatGPT(G版)</el-header>
-    <el-container>
+    <el-container class="container-middle">
        <el-aside class="container-left-menu">
-         <h2 style="text-align: center;">历史问题</h2>
          <div class="compare-container">
-           <div class="compare" v-for="questionItem in questionItems" @click="reWriteQues(questionItem.text)">
-             <a>{{questionItem.text}}</a>
-           </div>
+           <div class="compare" v-for="questionItem in questionItems" @click="reWriteQues(questionItem.text)">{{questionItem.text}}</div>
          </div>
        </el-aside>
       <el-container class="container-center-main">
-        <el-main class="container-main">
-          <div class="containMain" ref="containMainRef">
-            <div class="backdrop" v-for="item in state.items" :key="item.id">
-              <div class="titleDiv" @mouseover="item.showTip = true;" @mouseout="item.showTip = false;">
-                <a class="title">{{ item.title }}</a>
-              </div>
-              <div class="tooltip" v-if="item.showTip">{{ item.title }}</div>
-              <!-- <hr> 添加一条分界线 -->
-              <el-divider><el-icon><star-filled /></el-icon></el-divider>
-              <div v-if="item.showImage" style="margin-top: 25px;">
-                <img :src="item.imageUrl" @click="isShowImage(item.imageUrl)" style="width: 300px;" alt="">
-              </div>
-              <div v-if="item.showMarkdown">
-                <MarkdownRenderer :markdown="item.markdownText" :num="item.id"></MarkdownRenderer>
-              </div>
+        <el-main class="container-center-top">
+          <div class="card-backdrop" v-for="item in state.items" :key="item.id">
+            <div class="card-title" @mouseover="item.showTip = true;" @mouseout="item.showTip = false;">{{ item.title }}</div>
+            <div class="tooltip" v-if="item.showTip">{{ item.title }}</div>
+            <!-- <hr> 添加一条分界线 -->
+            <el-divider><el-icon><star-filled /></el-icon></el-divider>
+            <div v-if="item.showImage" style="margin-top: 25px;">
+              <img :src="item.imageUrl" @click="isShowImage(item.imageUrl)" style="width: 300px;" alt="">
             </div>
-            <big-img v-if="showImg" @click="showImg = false" :imgSrc="bigImgSrc"></big-img>
+            <div v-if="item.showMarkdown">
+              <MarkdownRenderer :markdown="item.markdownText" :num="item.id"></MarkdownRenderer>
+            </div>
           </div>
+          <big-img v-if="showImg" @click="showImg = false" :imgSrc="bigImgSrc"></big-img>
         </el-main>
         <el-footer class="container-footer">
           <el-input ref="textareaRef" v-model="textarea" :rows="2" type="textarea" placeholder="请输入您要咨询的问题..."
@@ -37,11 +30,11 @@
           <el-button type="success" @click="sendQue" :disabled="isDisabled"
             style="color: white;font-weight: bold;background-color: blueviolet;">发送(Ctrl+Enter)</el-button>
           <el-button type="danger" @click="stopSend" :disabled="isStopDisabled" style="color: white;font-weight: bold;">停止发送</el-button>
-          <el-button @click="reset()" style="color: black;font-weight: bold;">清空</el-button>
+          <el-button @click="reset()" style="color: black;font-weight: bold;">清空问答内容</el-button>
         </el-footer>
       </el-container>
       <el-aside class="container-right-menu">
-        <div class="bottom-button">
+        <div class="bottom-button" style="display: none">
           <el-button @click="router.back()">返回登陆</el-button>
           <el-button type="success"><router-link to="/demo">测试demo</router-link></el-button>
           <el-button type="success"><router-link to="/helloWorld">测试helloWorld</router-link></el-button>
@@ -52,8 +45,7 @@
     </el-container>
     <div class="bottom-title">
       <div class="run-title">
-        本作者是后台开发从业者，前端页面是一边学习一边开发，如有不足之处，敬请提<a href="https://github.com/GershonWang/chat/issues"
-          target="_blank">issue</a>，作者尽能力改善！！
+        本作者是后台开发从业者，前端页面是一边学习一边开发，如有不足之处，敬请提<a href="https://github.com/GershonWang/ChatGpt/issues" target="_blank">issue</a>，作者尽能力改善！！
       </div>
     </div>
   </el-container>
@@ -75,7 +67,6 @@ const router = useRouter();
 const textarea: Ref<string> = ref('')
 const isDisabled: Ref<boolean> = ref(false)
 const isStopDisabled: Ref<boolean> = ref(true)
-const containMainRef = ref<InstanceType<typeof HTMLElement>>()
 const textareaRef = ref<InstanceType<typeof HTMLElement>>()
 const showImg: Ref<boolean> = ref(false)
 const bigImgSrc: Ref<string> = ref('')
@@ -90,6 +81,10 @@ interface Item {
   markdownText: string;
 }
 
+interface QuestionItem {
+  text: string;
+}
+
 interface State {
   items: Item[];
 }
@@ -98,7 +93,7 @@ const state: State = reactive<State>({
   items: []
 });
 
-const questionItems = ref([]);
+const questionItems = ref([] as QuestionItem[]);
 
 // 获取登陆token
 let localToken = localStorage.getItem('token');
@@ -115,9 +110,9 @@ let itemId = 1;
  * 自动滚动
  */
 function autoScroll() {
-  const contain = containMainRef.value as unknown as HTMLElement;
-  if ("scrollTop" in contain) {
-    contain.scrollTop = contain.scrollHeight;
+  let querySelector = document.querySelector('.container-center-top');
+  if(querySelector) {
+    querySelector.scrollTop = querySelector.scrollHeight;
   }
 }
 
@@ -239,7 +234,7 @@ function isShowImage(imageUrl: string) {
   // 6.7 itemId加1
   itemId++; 
   // 6.8 左侧菜单追加问题内容
-  const questionItem = {
+  const questionItem: QuestionItem = {
     text: inputMsg
   }
   questionItems.value.push(questionItem)
@@ -351,7 +346,7 @@ function stopSend() {
   itemId = 1;
 }
 
-function reWriteQues(questionMsg) {
+function reWriteQues(questionMsg: string) {
   textarea.value = questionMsg;
   (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
 }
@@ -381,6 +376,7 @@ const closeApp = () => {
 .container {
   width: 100%;
   height: 100%;
+  border: solid;
 }
 /********************* 标题栏 *********************/
 .container-title {
@@ -390,17 +386,25 @@ const closeApp = () => {
   line-height: var(--el-header-height);
   display: none;
 }
+/******************** 界面中间部分 ********************/
+.container-middle {
+  width: 100%;
+  height: 95%;
+}
 /******************** 左侧菜单 ********************/
 .container-left-menu {
   width: 15%;
-  border: solid;
+  height: 100%;
+  background-color: #2D333B;
   position: relative;
   text-align: left;
 }
 .compare {
+  font-size: 14px;
+  font-weight: bold;
   margin: 10px;
-  padding: 5px;
-  border-radius: 10px;
+  padding: 3px 10px;
+  border-radius: 5px;
   display: flex;
   overflow-wrap: anywhere;
   animation: rainbow 8s infinite;
@@ -415,25 +419,20 @@ const closeApp = () => {
 }
 .compare-container {
   height: 90%;
-  overflow: auto;
 }
 /****************** 中间内容 *****************/
 .container-center-main {
-  background-color: white;
-}
-.container-main {
-  background-color: #242424;
-  height: 340px;
-  text-align: left;
-  border: solid;
-  padding-right: 5px;
-}
-.containMain {
+  width: 70%;
   height: 100%;
-  overflow: auto;
-  padding-right: 20px;
+  background-color: #242424;
+  text-align: left;
+  border-right: solid;
+  border-left: solid;
 }
-.backdrop {
+.container-center-top {
+  height: 100%;
+}
+.card-backdrop {
   width: 90%;
   border-radius: 15px;
   backdrop-filter: blur(20px);
@@ -453,27 +452,25 @@ const closeApp = () => {
   padding: 5px 10px;
   overflow-wrap: break-word;
 }
-.titleDiv {
+.card-title {
+  color: darkgoldenrod;
+  font-size: 24px;
+  font-weight: bold;
   white-space: nowrap; /* 防止文字换行 */
   overflow: hidden; /* 超出宽度部分隐藏 */
   text-overflow: ellipsis; /* 超出宽度部分显示省略号 */
 }
-.title {
-  color: #008000;
-  font-size: 18px;
-  font-weight: bold;
-}
 .container-footer {
-  background-color: #2D333B;
+  background-color: #242424;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: solid;
 }
 /*********************** 右侧菜单 ***********************/
 .container-right-menu {
   width: 15%;
-  border: solid;
+  height: 100%;
+  background-color: #2D333B;
   position: relative;
   text-align: left;
 }
@@ -487,10 +484,10 @@ const closeApp = () => {
 }
 /********************* 底部滚动字幕 *********************/
 .bottom-title {
-  border: solid;
   padding: 5px;
   height: 24px;
   overflow: hidden;
+  border-top: solid;
 }
 .run-title {
   animation: scroll 50s linear infinite;

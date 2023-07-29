@@ -30,9 +30,8 @@ function updateHandle() {
   autoUpdater.setFeedURL({
     provider: 'github',
     owner: 'GershonWang',
-    repo: 'chat',
-    releaseType: 'release',
-    private: true
+    repo: 'ChatGpt',
+    releaseType: 'release'
   })
   // 设置不自动下载
   autoUpdater.autoDownload = false;
@@ -93,7 +92,6 @@ async function createWindow() {
     win.webContents.openDevTools({ mode: 'detach' })
   } else {
     await win.loadFile(indexHtml)
-    win.webContents.openDevTools({ mode: 'detach' })
   }
   // Test actively push message to the Electron-Renderer
   win.webContents.on('did-finish-load', () => {

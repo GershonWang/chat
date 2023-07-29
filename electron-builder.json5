@@ -12,7 +12,7 @@
   publish: [
     {
       provider: 'generic',
-      url: 'https://github.com/GershonWang/chat/releases'
+      url: 'https://github.com/GershonWang/ChatGpt/releases'
     }
   ],
   mac: {
