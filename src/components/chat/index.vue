@@ -45,7 +45,7 @@
     </el-container>
     <div class="bottom-title">
       <div class="run-title">
-        本作者是后台开发从业者，前端页面是一边学习一边开发，如有不足之处，敬请提<a href="https://github.com/GershonWang/ChatGpt/issues" target="_blank">issue</a>，作者尽能力改善！！
+        本作者是后台开发从业者，前端页面是一边学习一边开发，如有不足之处，敬请提<a href="https://github.com/GershonWang/chat/issues" target="_blank">issue</a>，作者尽能力改善！！
       </div>
     </div>
   </el-container>
@@ -104,20 +104,14 @@ let localUsername = localStorage.getItem('username');
 let localUid = localStorage.getItem('uid');
 // 初始化卡片序号
 let itemId = 1;
-
-/**
- * 自动滚动
- */
+// 自动滚动
 function autoScroll() {
   let querySelector = document.querySelector('.container-center-top');
   if(querySelector) {
     querySelector.scrollTop = querySelector.scrollHeight;
   }
 }
-
-/**
- * 设置apiKey
- */
+// 设置apiKey
 function setAPIKey() {
   if(localApikey != null) return;
   ElMessageBox.prompt('请输入openai的apiKey', '提示', {
@@ -144,10 +138,7 @@ function setAPIKey() {
     })
   })
 }
-
-/**
- * 获取随机数
- */
+// 获取随机数
 function uuid() {
   const array = [];
   const hexDigits = "0123456789abcdef";
@@ -159,29 +150,17 @@ function uuid() {
   array[8] = array[13] = array[18] = array[23] = "-";
   return array.join("");
 }
-
-/**
- * 初始化加载
- */
+// 初始化加载
 setAPIKey();
-/**
- * 初始化设置uid
- */
+// 初始化设置uid
 localStorage.setItem('uid', uuid());
 localUid = localStorage.getItem('uid');
-
-/**
- * 是否大图显示图片
- * @param imageUrl 图片地址
- */
+// 大图显示
 function isShowImage(imageUrl: string) {
   showImg.value = true;
   bigImgSrc.value = imageUrl;
 }
-
-/**
- * 请求查询接口
- */
+// 请求查询接口
  async function sendQue() {
   /* 1.校验token */
   if(localToken == null) {
@@ -207,7 +186,6 @@ function isShowImage(imageUrl: string) {
     ElMessage.warning("发送内容不能为空！");
     return;
   }
-  /* 6.初始化一些属性参数 */
   // 6.1 将输入框的内容置空
   textarea.value = '';
   // 6.2 禁用(输入框/发送按钮)
@@ -237,7 +215,6 @@ function isShowImage(imageUrl: string) {
     text: inputMsg
   }
   questionItems.value.push(questionItem)
-
   /* 7.建立SSE网络连接,并将缓存中的uid传入请求头 */
   const eventSource = new EventSourcePolyfill(import.meta.env.VITE_BASE_URL + '/createSse', {
     headers: { 'uid': localUid },
@@ -321,10 +298,7 @@ function isShowImage(imageUrl: string) {
     (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
   };
 }
-
-/**
- * 关闭正在进行中的会话
- */
+// 关闭正在进行中的会话
 function stopSend() {
   /* 1.获取缓存中的uuid,并判断是否为空 */
   if (localUid == null) {
@@ -334,25 +308,19 @@ function stopSend() {
   console.log("请求关闭会话时获取到的uid", localUid);
   closeChatApi(localUid);
 }
-
-/**
- * 重置uuid以及数据
- */
+// 重置uuid以及数据
  function reset() {
   localStorage.setItem('uid', uuid());
   localUid = localStorage.getItem('uid');
   state.items = [];
   itemId = 1;
 }
-
+// 将问题重新写入提问文本框内并获取焦点
 function reWriteQues(questionMsg: string) {
   textarea.value = questionMsg;
   (textareaRef.value as HTMLElement).focus(); // 输入框获取焦点
 }
-
-/**
- * 添加监听
- */
+// 添加监听
 document.addEventListener('click', (event: MouseEvent) => {
   if (event.target != null) {
     const target = event.target as HTMLAnchorElement;
@@ -362,14 +330,11 @@ document.addEventListener('click', (event: MouseEvent) => {
     }
   }
 })
-/**
- * 发送信息到主线程执行关闭程序
- */
+// 发送信息到主线程执行关闭程序
 const closeApp = () => {
   ipcRenderer.send('close-app');
 }
 </script>
-
 <style scoped>
 /******************** 整体宽高 ********************/
 .container {

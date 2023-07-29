@@ -80,7 +80,12 @@ app.on('second-instance', () => {
 
 app.on('activate', () => {
   const allWindows = BrowserWindow.getAllWindows();
-  allWindows.length ? allWindows[0].focus() : createWindow()
+  console.log('allWindows.length',allWindows.length)
+  if (allWindows.length) {
+    allWindows[0].focus()
+  } else {
+    createWindow()
+  }
 })
 // New window example arg: new windows url
 ipcMain.handle('open-win', (_, arg) => {
