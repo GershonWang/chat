@@ -132,57 +132,11 @@ const handleUsernameEnter = () => {
   (document.querySelector('input[type=password]') as HTMLInputElement).focus();
 }
 /********************************************************************************************/
-//获取当前版本
+// 获取当前版本
 ipcRenderer.send('app_version');
 ipcRenderer.on('app_version', (event, arg) => {
   ipcRenderer.removeAllListeners('app_version');
   version.value.innerText = arg.version;
-});
-//新版本检测
-ipcRenderer.send('checkForUpdate');
-ipcRenderer.on('checking_for', (event,msg) => {
-  console.log("checking_for",msg)
-  message.value.innerText = msg;
-  notification.value.classList.remove('hidden');
-});
-// 发现新版本
-ipcRenderer.on('update_available', () => {
-  console.log("发现新版本")
-  message.value.innerText = '发现新版本！是否更新?';
-  notification.value.classList.remove('hidden');
-});
-// 没发现新版本
-ipcRenderer.on('update-not-available', () => {
-  console.log("没发现新版本")
-  message.value.innerText = '现在使用的就是最新版本，不用更新';
-  notification.value.classList.remove('hidden');
-});
-//下载成功触发
-ipcRenderer.on('update_downloaded', () => {
-  ipcRenderer.removeAllListeners('update_downloaded');
-  message.value.innerText = '下载成功！是否更新?';
-  notification.value.classList.remove('hidden');
-});
-//下载中触发
-ipcRenderer.on("downloadProgress", (event, progressObj) => {
-  console.log('downloadProgress',progressObj);
-  let downloadPercent = progressObj.percent || 0;
-  message.value.innerText = "正在下载..." + downloadPercent;
-});
-// 更新時触发消息
-ipcRenderer.on('UpdateMessage', (arg) => {
-  console.log('UpdateMessage',arg);
-  notification.value.classList.remove('hidden');
-});
-// 下载异常触发
-ipcRenderer.on('updateError', (arg) => {
-  console.log('updateError',arg)
-  message.value.innerText = '更新失败请检测网络';
-  notification.value.classList.remove('hidden');
-});
-// 打印日志
-ipcRenderer.on('printError', (arg) => {
-  console.log('printError',arg)
 });
 // 下次再说
 function closeNotification() {

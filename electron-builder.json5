@@ -9,12 +9,6 @@
     output: 'release/${version}'
   },
   files: ['dist-electron', 'dist'],
-  publish: [
-    {
-      provider: 'generic',
-      url: 'https://github.com/GershonWang/ChatGpt/releases'
-    }
-  ],
   mac: {
     artifactName: '${productName}_${version}.${ext}',
     target: ['dmg']
@@ -43,13 +37,12 @@
   },
   linux: {
     artifactName: '${productName}_${version}.${ext}',
-    target: ['deb'],
+    target: ['deb','AppImage'],
     category: 'Utility',
     icon: 'public/logo_512x512.png',
   },
   deb: {
     packageName: 'com.dongpl.chat',
-    depends: [],
-    // options: '',
+    packageCategory: 'opt/apps'
   }
 }

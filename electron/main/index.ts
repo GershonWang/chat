@@ -1,7 +1,6 @@
 import { app, BrowserWindow, shell, ipcMain, Menu } from 'electron'
 import { release } from 'node:os'
 import { join } from 'node:path'
-import { autoUpdater } from 'electron-updater'
 
 process.env.DIST_ELECTRON = join(__dirname, '..')
 process.env.DIST = join(process.env.DIST_ELECTRON, '../dist')
@@ -23,49 +22,6 @@ let win: BrowserWindow | null = null
 const preload = join(__dirname, '../preload/index.js')
 const url = process.env.VITE_DEV_SERVER_URL
 const indexHtml = join(process.env.DIST, 'index.html')
-
-/****************************************** 自动更新 ***********************************************/
-function updateHandle() {
-  // 设置更新源为GitHub Release
-  autoUpdater.setFeedURL({
-    provider: 'github',
-    owner: 'GershonWang',
-    repo: 'ChatGpt',
-    releaseType: 'release'
-  })
-  // 设置不自动下载
-  autoUpdater.autoDownload = false;
-  autoUpdater.on('error', function (error) {
-    console.log('更新出现异常');
-    win.webContents.send('updateError', error)
-  });
-  autoUpdater.on('checking-for-update', function () {
-    console.log('开始检测更新,触发登录页面中的checking_for事件接收');
-    win.webContents.send('checking_for', "正在检测更新...")
-  });
-  autoUpdater.on('update-available', function (info) {
-    console.log('当发现一个可用更新的时候触发，更新包下载会自动开始',info);
-    win.webContents.send('update_available')
-  });
-  autoUpdater.on('update-not-available', function (info) {
-    console.log('当没有可用更新的时候触发',info);
-    win.webContents.send('update-not-available')
-  });
-  autoUpdater.on('download-progress', function (progressObj) {
-    console.log('更新下载进度事件');
-    win.webContents.send('downloadProgress', progressObj)
-  })
-  // 安装包下载完成
-  autoUpdater.on('update-downloaded', function () {
-    win.webContents.send('update_downloaded')
-    ipcMain.on('isUpdateNow', (e, arg) =>{
-      console.log(arg);
-      console.log("开始更新");
-      //退出并安装
-      autoUpdater.quitAndInstall();
-    });
-  });
-}
 
 async function createWindow() {
   win = new BrowserWindow({
@@ -107,7 +63,6 @@ async function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
-  updateHandle();
 });
 
 app.on('window-all-closed', () => {
@@ -124,14 +79,9 @@ app.on('second-instance', () => {
 })
 
 app.on('activate', () => {
-  const allWindows = BrowserWindow.getAllWindows()
-  if (allWindows.length) {
-    allWindows[0].focus()
-  } else {
-    createWindow();
-  }
+  const allWindows = BrowserWindow.getAllWindows();
+  allWindows.length ? allWindows[0].focus() : createWindow()
 })
-
 // New window example arg: new windows url
 ipcMain.handle('open-win', (_, arg) => {
   const childWindow = new BrowserWindow({
@@ -142,37 +92,15 @@ ipcMain.handle('open-win', (_, arg) => {
     },
   })
   if (process.env.VITE_DEV_SERVER_URL) {
-    childWindow.loadURL(`${url}#${arg}`).then(r => {
-      console.log('childWindow.loadURL r',r)
-    })
+    childWindow.loadURL(`${url}#${arg}`)
   } else {
-    childWindow.loadFile(indexHtml, {hash: arg}).then(r => {
-      console.log('childWindow.loadFile r',r)
-    })
-   }
+    childWindow.loadFile(indexHtml, {hash: arg})
+  }
 })
-
 // 获取当前版本
 ipcMain.on('app_version', (event) => {
   event.sender.send('app_version', { version: app.getVersion() });
 });
-// 登录页面加载后触发此更新
-ipcMain.on("checkForUpdate", (event) => {
-  console.log('登录页面加载后触发此更新',event)
-  console.log('子加载 autoUpdater',autoUpdater)
-  autoUpdater.checkForUpdates().then(r => {
-    console.log('执行自动更新检查',r)
-  })
-  console.log('加载后 autoUpdater',autoUpdater)
-})
-// 立即更新
-ipcMain.on('isUpdateNow', (event) => {
-  autoUpdater.downloadUpdate().then((path) => {
-    event.sender.send('UpdateMessage', path);
-  }).catch((e) => {
-    event.sender.send('updateError', e);
-  })
-})
 // 监听页面发出的关闭程序请求
 ipcMain.on('close-app', () => {
   app.quit();
