@@ -3,12 +3,15 @@
     <el-header class="container-title">ChatGPT(G版)</el-header>
     <el-container class="container-middle">
        <el-aside class="container-left-menu">
-         <div class="compare-container">
+         <div class="compare-container" @mousewheel="handleLeftMenuMousewheel">
            <div class="compare" v-for="questionItem in questionItems" @click="reWriteQues(questionItem.text)">{{questionItem.text}}</div>
+         </div>
+         <div class="container-left-menu-single">
+           <el-button @click="router.back()">返回登陆</el-button>
          </div>
        </el-aside>
       <el-container class="container-center-main">
-        <el-main class="container-center-top">
+        <el-main class="container-center-top" @mousewheel="handleMousewheel">
           <div class="card-backdrop" v-for="item in state.items" :key="item.id">
             <div class="card-title" @mouseover="item.showTip = true;" @mouseout="item.showTip = false;">{{ item.title }}</div>
             <div class="tooltip" v-if="item.showTip">{{ item.title }}</div>
@@ -30,12 +33,11 @@
           <el-button type="success" @click="sendQue" :disabled="isDisabled"
             style="color: white;font-weight: bold;background-color: blueviolet;">发送(Ctrl+Enter)</el-button>
           <el-button type="danger" @click="stopSend" :disabled="isStopDisabled" style="color: white;font-weight: bold;">停止发送</el-button>
-          <el-button @click="reset()" style="color: black;font-weight: bold;">清空问答内容</el-button>
+          <el-button @click="reset()" style="color: black;font-weight: bold;">清空</el-button>
         </el-footer>
       </el-container>
       <el-aside class="container-right-menu">
         <div class="bottom-button" style="display: none">
-          <el-button @click="router.back()">返回登陆</el-button>
           <el-button type="success"><router-link to="/demo">测试demo</router-link></el-button>
           <el-button type="success"><router-link to="/helloWorld">测试helloWorld</router-link></el-button>
           <el-button type="success"><router-link to="/test_mark">测试test_mark</router-link></el-button>
@@ -93,7 +95,6 @@ const state: State = reactive<State>({
 });
 
 const questionItems = ref([] as QuestionItem[]);
-
 // 获取登陆token
 let localToken = localStorage.getItem('token');
 // 获取apikey
@@ -330,6 +331,27 @@ document.addEventListener('click', (event: MouseEvent) => {
     }
   }
 })
+// 监听鼠标滚轮事件
+function handleLeftMenuMousewheel(event) {
+  const delta = event.deltaY || event.detail || event.wheelDelta;
+  // 根据滚动方向来改变滚动位置
+  let querySelector = document.querySelector('.compare-container');
+  if(querySelector) {
+    querySelector.scrollTop += delta;
+  }
+  // 阻止默认滚动行为
+  event.preventDefault();
+}
+function handleMousewheel(event) {
+  const delta = event.deltaY || event.detail || event.wheelDelta;
+  // 根据滚动方向来改变滚动位置
+  let querySelector = document.querySelector('.container-center-top');
+  if(querySelector) {
+    querySelector.scrollTop += delta;
+  }
+  // 阻止默认滚动行为
+  event.preventDefault();
+}
 // 发送信息到主线程执行关闭程序
 const closeApp = () => {
   ipcRenderer.send('close-app');
@@ -362,6 +384,12 @@ const closeApp = () => {
   background-color: #2D333B;
   position: relative;
   text-align: left;
+  display: flex;
+  flex-direction: column;
+}
+.compare-container {
+  flex: 1;
+  overflow: hidden;
 }
 .compare {
   font-size: 14px;
@@ -381,8 +409,9 @@ const closeApp = () => {
   font-size: 14px;
   font-weight: bold;
 }
-.compare-container {
-  height: 90%;
+.container-left-menu-single {
+  text-align: center;
+  margin: 10px auto;
 }
 /****************** 中间内容 *****************/
 .container-center-main {
@@ -395,6 +424,7 @@ const closeApp = () => {
 }
 .container-center-top {
   height: 100%;
+  overflow: hidden;
 }
 .card-backdrop {
   width: 90%;
